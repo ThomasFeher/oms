@@ -204,6 +204,8 @@ defaultOptions.sourceLocOptions.frequHigh = inf;
 		%result.signal(3,:) = sphere signal
 defaultOptions.doADMA = false;
 defaultOptions.adma.doICA = false; 
+defaultOptions.adma.doEqualization = true;%equalization of cardioids'
+														%frequency response
 %TODO: change to doFindMax
 defaultOptions.adma.findMax = false;%use adaptive algorithm to find speaker
 %TODO: change to doFindMin
@@ -224,7 +226,6 @@ defaultOptions.adma.mask_update = 0.2;
 defaultOptions.adma.mask_angle = 0.2;%TODO take an angle as for the twin mic,
 										%and set to 0.9
 defaultOptions.adma.d = 24.8e-3;%distance between microphones
-
 defaultOptions.adma.zero_noise = false;%if true, set output signal to zero if
 										%no speaker could be found
 %%%%%ADMA%%%%%

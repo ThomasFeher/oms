@@ -329,7 +329,8 @@ if(options.doADMA)
 	if(options.adma.returnCardioids)
 		[sigFullFd frequFull] = fftAndFrequ(signal,fs);
 		results.adma.cardioids = ifft(admaBuildCardioids(sigFullFd,frequFull...
-											,options.adma.d,options.c).').';
+											,options.adma.d,options.c...
+											,options.adma.doEqualization).').';
 	end
 
 	%initialize parameter
@@ -513,6 +514,107 @@ if(options.doFDICA)
 end
 %%%%%ICA%%%%%
 
+%%%%%RPM estimation%%%%%
+if(options.doRpmEstimation)
+	disp('RPM estimation...');
+	smoothNum = options.rpmEstimation.smoothNum;
+	predictionCoeffNum = options.rpmEstimation.predictionCoeffNum;
+	%calculate coefficient to convert frequency to rpm
+	results.rpmEstimation.rpmCoeff = 60*options.rpmEstimation.gz/...
+			(options.rpmEstimation.za*options.rpmEstimation.m);
+	options.rpmEstimation.rpmCoeff = results.rpmEstimation.rpmCoeff;
+	if(options.rpmEstimation.candNum<1)%at least one candidate should be estimated
+		options.rpmEstimation.candNum = 1;
+	end
+	if(options.rpmEstimation.histRes<0.01)
+		options.rpmEstimation.histRes = 0.01;
+	end
+	if(options.rpmEstimation.histRes>options.rpmEstimation.frequHigh/3)
+		options.rpmEstimation.histRes = options.rpmEstimation.frequHigh/3;
+	end
+	%calculate likelihood function
+	sigma = options.rpmEstimation.maxLhHisto.sigma;
+	mu = options.rpmEstimation.maxLhHisto.mu;
+	frequLikelihood = 1/(sigma*sqrt(2*pi)).*exp(-1/2.*((frequency-mu)./sigma).^2);
+	results.rpmEstimation.frequLikelihood = frequLikelihood;
+	for sigCnt=1:sigNum
+		for blockCnt=1:blockNum
+			%processing
+			rpmResult(sigCnt,blockCnt) = rpmEstimation(options,...
+					squeeze(sigVec(sigCnt,blockCnt,:)),...
+					squeeze(blockMat(sigCnt,blockCnt,:)),frequLikelihood);
+			%candidates frequ before sorting out impossible values
+			results.rpmEstimation.candidates{sigCnt,blockCnt} = ...
+					rpmResult(sigCnt,blockCnt).candidates;
+			%value of frequ domain candidates
+			results.rpmEstimation.candInt{sigCnt,blockCnt} = ...
+					rpmResult(sigCnt,blockCnt).candInt;
+			%filter best candidates via linear prediction filter
+			if(predictionCoeffNum>0&&blockCnt>predictionCoeffNum+1)
+				%calculate lpc coefficients
+				lpcCoeffs = arburg(...
+						results.rpmEstimation.progress(sigCnt,...
+						blockCnt-predictionCoeffNum-1:blockCnt-1),predictionCoeffNum);
+				if(any(isnan(lpcCoeffs)))
+					lpcCoeffs = [0 -1 zeros(1,predictionCoeffNum-1)];
+				end
+				%calculate predicted value
+				predictedValue = filter([0 -lpcCoeffs(2:end)],1,...
+						results.rpmEstimation.progress(sigCnt,1:blockCnt-1));
+				predictedValue = predictedValue(end);
+				%define range
+				rangeMin = predictedValue-options.rpmEstimation.predictionRange;
+				rangeMax = predictedValue+options.rpmEstimation.predictionRange;
+				%find values in range
+				goodInd = find(rpmResult(sigCnt,blockCnt).best<rangeMax&...
+						rpmResult(sigCnt,blockCnt).best>rangeMin);
+				%delete out of range values
+				rpmResult(sigCnt,blockCnt).best =...
+						rpmResult(sigCnt,blockCnt).best(goodInd);
+				rpmResult(sigCnt,blockCnt).bestInt =...
+						rpmResult(sigCnt,blockCnt).bestInt(goodInd);
+				%if no reasonable value is found, set best to previous best
+				if(numel(rpmResult(sigCnt,blockCnt).best)==0)
+					if(blockCnt==1)%no previous value, so set to zero
+						rpmResult(sigCnt,blockCnt).best = 0;
+						rpmResult(sigCnt,blockCnt).bestInt = 1;
+					else
+						rpmResult(sigCnt,blockCnt).best =...
+								rpmResult(sigCnt,blockCnt-1).best(1);
+						rpmResult(sigCnt,blockCnt).bestInt =...
+								rpmResult(sigCnt,blockCnt-1).bestInt(1);
+					end
+				end
+			end
+			%best candidates
+			results.rpmEstimation.rpmCandidates{sigCnt,blockCnt} = ...
+					rpmResult(sigCnt,blockCnt).best;
+			%value of best candidates
+			results.rpmEstimation.bestInt{sigCnt,blockCnt} = ...
+					rpmResult(sigCnt,blockCnt).bestInt;
+			%final result (index of best of the candidates)
+			results.rpmEstimation.progress(sigCnt,blockCnt) =...
+					rpmResult(sigCnt,blockCnt).best(1);
+		end
+	end
+	results.rpmEstimation.single = rpmResult;
+	%smoothing
+	if(smoothNum>1)
+		switch(options.rpmEstimation.smoothAlgo)
+		case 'median'
+			results.rpmEstimation.progress =...
+				medfilt1(results.rpmEstimation.progress,smoothNum,blockNum,2);
+		case 'mean'
+			for sigCnt=1:sigNum
+				results.rpmEstimation.progress(sigCnt,:) =...
+						conv(results.rpmEstimation.progress(sigCnt,:),...
+						ones(smoothNum,1),'same')./smoothNum;
+			end
+		end %switch smooth algo
+	end %smoothing
+end
+%%%%%RPM estimation%%%%%
+
 %%%%%to time domain%%%%%
 if(options.doTdRestore)
 	signalResult = ...
@@ -546,7 +648,57 @@ if(options.doConvolution&options.doEval)
 	results.eval = evaluate(options,results);
 end
 
+%{
+if(options.doConvolution&options.doEval)
+	%TODO das muss irgendwie über die options gemacht werden, nicht hier im
+		%framework! Es wird immer nur 1 Sortiermethode benutzt.
+	%TODO evalStd und evalPEASS komplett voneinander trennen
+	%sortList={'sortBypass';'sortComplex';'sortCorrNeighbour';'sortFeatureW';...
+		%'sortFFT';'sortPattern';'sortPatternEdge';'sortPatternMin';...
+		%'sortPatternFrequMin';'sortPatternFrequMinOpt';...
+		%'sortPatternFrequMultiMin';'sortWeightVec'};
+	%sortList={'sortBypass';'sortFFT';'sortPattern';'sortPatternMin';...
+		%'sortWeightVec';'sortCorrNeighbour';'sortPatternFrequMultiMin';...
+		%'sortPatternFrequMultiMax'};
+	sortList={'sortBypass';'sortKurtosis';'sortCorrNeighbour';...
+		'sortPatternFrequMultiMin';'sortPatternFrequMultiMax'};
+	resultID = fopen([options.resultDir 'result.txt'],'w');
+	if(options.doEvalPeass)
+		fprintf(resultID,...
+			[['name improvement-signal-1 improvement-signal-2 ']...
+			['distortion-signal-1 distortion-signal-2 ']...
+			['best-PEASS-score-for-signal-1 best-PEASS-channel-for-signal-1']...
+			['best-PEASS-score-for-signal-2 best-PEASS-channel-for-signal-2\n']]);
+	else
+		fprintf(resultID,...
+			[['name improvement-signal-1 improvement-signal-2 ']...
+			['distortion-signal-1 distortion-signal-2\n']]);
+	end
+	for sortCnt=1:numel(sortList)
+		disp('#################################');
+		run(sortList{sortCnt});
+		results.WAllSort = WAllSort;
+		disp(sortName);
+		sigFFTICA = applyICA(WAllSort,sigVec,blockSizeZeroPads,blockNum);
+		signalResult = toTimeDomain(sigFFTICA,sigNum,blockSize,timeShift,...
+			zeroPads,blockNum);
+		[patternSort,patternUnsort,patternUnsortShaped] = ...
+			beampattern(options,WAllUnsort,WAllUnsortShaped,WAllSort);
+		draw;
+		writeAudio(signal,signalResult,sortName,options);
+		evaluate(options,results);
+		fprintf(resultID,resultString);
+	end
+	fclose(resultID);
+	evaluateAll;
+end
+%}
+
+%}
+
+results.frequencies = options.frequency;
 toc
+%diary off;
 
 function ret = doTwinMic(options)
 ret = false;

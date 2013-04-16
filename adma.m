@@ -17,7 +17,8 @@ function [ out  options sigVecCard ] = adma(sigVecProc,freqVec,fs,options...
 d = options.d;    %distance between microphones
 
 %Build cardioid signals
-sigVecCard = admaBuildCardioids(sigVecProc,freqVec,d,speedOfSound);
+sigVecCard = admaBuildCardioids(sigVecProc,freqVec,d,speedOfSound...
+													,options.doEqualization);
 
 no_speaker = false;
 %% Locate Speaker %%
