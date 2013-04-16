@@ -1,0 +1,29 @@
+terminal:(4 channels, geometry: -0.12, -0.03, 0.03, 0.12)
+	room: 'buero', 'hallraum', 'refRaum'
+		('buero' is the same room as 'praktikumsraum')
+	distance: 0.8, 1.8
+	angle: 0,15,30,45,60,75,90
+
+twoChanMic:
+	room: 'praktikum', 'studio', 'refRaum'
+	distance: 0.5, 1.5
+	angle: 0,30,60,90,120,150,180
+
+twoChanMicHiRes:
+	room: 'studio', 'refRaum'
+	distance: 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.75, 1
+	angle studio: 0,15,30,45,60,75,90,105,120,135,150,165,180,195,210,225,240,
+					255,270,285,300,315,330,345
+	angle refRaum: 0
+
+fourMic:
+	room: 'museum', 'praktikumsraum', 'studio', 'wohnzimmer'
+	distance: 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2, 2.2, 2.4, 2.6, 2.8
+				3, 3.2, 3.4, 3.6, 3.8, 4
+	angle: 0
+
+threeChanDMA:
+	room: 'studio'
+	distance: 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.75, 1
+	angle: 0,15,30,45,60,75,90,105,120,135,150,165,180,195,210,225,240,255,270
+			,285,300,315,330,345
