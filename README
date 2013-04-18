@@ -1,0 +1,18 @@
+Octave Multi-Channel Signal Processing
+
+These are the tools i wrote while working on my PhD thesis. Trying to keep
+everything in one easy to configure framework resulted in this little
+collection.
+
+There is a lot of room for improvements, lot of unused or commented code and
+even possibly wrong calculations.
+
+Feel free to improve, find bugs, add features add test cases and of course use
+these tools.
+
+The best starting points are the defaults.m file which contains all keys and
+their standard values. Also look at the much too few test cases in tests/ and
+the script using this framework in scripts/.
+
+At the moment everything should work in Octave and Matlab, but because of not
+having access to Matlab in the future this can not be guarantied anymore.
