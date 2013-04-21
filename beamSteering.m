@@ -24,4 +24,4 @@ end
 
 angle = angle/180*pi;%transform in radians
 directionVector = geometry * sin(angle);
-W = exp(i*2*pi*directionVector.'*frequencies.'/c)/numel(geometry);
+W = exp(-i*2*pi*directionVector.'*frequencies.'/c)/numel(geometry);
