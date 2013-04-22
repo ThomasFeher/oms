@@ -213,6 +213,7 @@ defaultOptions.adma.findMin = false;%use adaptive algorithm to find noise source
 defaultOptions.adma.returnCardioids = false;%returns the time domain signals
 											%of the calculated cardioid signals
 											%in results.adma.cardioids
+defaultOptions.adma.steeringMethod = 'cardioids';%'cardioids' or 'eights'
 defaultOptions.adma.theta1 = 0;%angle of speaker
 defaultOptions.adma.theta2 = 180;%angle of noise source
 defaultOptions.adma.speaker_range=[-45 45];%limited range to search speaker in

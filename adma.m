@@ -15,6 +15,7 @@ function [ out  options sigVecCard ] = adma(sigVecProc,freqVec,fs,options...
 											,speedOfSound)
 %% PARAMETER %%
 d = options.d;    %distance between microphones
+steeringMethod = options.steeringMethod;
 
 %Build cardioid signals
 sigVecCard = admaBuildCardioids(sigVecProc,freqVec,d,speedOfSound...
@@ -24,7 +25,7 @@ no_speaker = false;
 %% Locate Speaker %%
 if (options.findMax)%use adaptive alogrithm to find speaker
 	search_range = options.search_range;
-	weights = admaParams(search_range, search_range+180);  %weights
+	weights = admaParams(search_range, search_range+180,steeringMethod);%weights
 	if (isfield(options,'speaker_range'))     %use function with speaker_range
 		[theta power1 no_speaker] = admaFindMax2(sigVecSearch, ...
 			search_range, ...
@@ -45,7 +46,8 @@ if (options.findMax)%use adaptive alogrithm to find speaker
 		[theta1 power1] = admaFindMax(sigVecSearch, search_range, weights);
 		if (options.findMin)
 			search_range = (theta1+90):15:(theta1+270);
-			weights = admaParams(theta1*ones(size(search_range)),search_range);
+			weights = admaParams(theta1*ones(size(search_range)),search_range...
+															,steeringMethod);
 			[theta2] = admaFindMin(sigVecCard, search_range,weights);
 		else
 			theta2 = options.theta2;
@@ -59,7 +61,8 @@ else%do not use adaptive algo to find speaker
 	theta1 = options.theta1;
 	if (options.findMin)
 		search_range = (theta1+90):15:(theta1+270);
-		weights = admaParams(theta1*ones(size(search_range)),search_range);
+		weights = admaParams(theta1*ones(size(search_range)),search_range...
+															,steeringMethod);
 		[theta2] = admaFindMin(sigVecCard, search_range,weights)
 	else
 		theta2 = options.theta2;
@@ -81,7 +84,7 @@ else
 		theta1 = theta2+180;
 	end
 	%calculate weights
-	weights1 = admaParams(theta1, theta2);        %best pattern
+	weights1 = admaParams(theta1, theta2,steeringMethod);%best pattern
 	%claculate output signals  
 	out(1,:) = weights1' * sigVecCard;       %best pattern 1
 	out(2,:) = weights1' * sigVecCard;       %best pattern 2
