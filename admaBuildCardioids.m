@@ -18,8 +18,8 @@
 %|
 %----------------------------------------------------------------------
 
-function [ sigVecCardioid ] = admaBuildCardioids(sigVec,freqVec,dist...
-												,speedOfSound,doEqualization)
+function [sigVecCardioid sigVecEight] = admaBuildCardioids(sigVec,freqVec...
+											,dist,speedOfSound,doEqualization)
 if(nargin<5)
 	doEqualization = true;
 end
@@ -44,9 +44,16 @@ sigVecCardioid(2,:) = (sigVec(3,:) - sigVec(1,:)...
 						.* exp((-j*2*pi*dist/speedOfSound) * freqVec));
 sigVecCardioid(3,:) = (sigVec(2,:) - sigVec(3,:)...
 						.* exp((-j*2*pi*dist/speedOfSound) * freqVec));
+%build eights
+sigVecEight(1,:) = sigVec(1,:) - sigVec(2,:);
+sigVecEight(2,:) = sigVec(3,:) - sigVec(1,:);
+sigVecEight(3,:) = sigVec(2,:) - sigVec(3,:);
 
 if(doEqualization)%equalize levels
 	sigVecCardioid(1,:) =  sigVecCardioid(1,:) ./ gain;
 	sigVecCardioid(2,:) =  sigVecCardioid(2,:) ./ gain;
 	sigVecCardioid(3,:) =  sigVecCardioid(3,:) ./ gain;
+	sigVecEight(1,:) =  sigVecEight(1,:) ./ gain;
+	sigVecEight(2,:) =  sigVecEight(2,:) ./ gain;
+	sigVecEight(3,:) =  sigVecEight(3,:) ./ gain;
 end

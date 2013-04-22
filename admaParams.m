@@ -46,12 +46,10 @@ elseif(strcmpi(steeringMethod,'eights'))
 	%but be shure to change the denominators (denomX and denomY) accordingly
 	%eX = [-sin(a2);0;sin(a1)]./denomX(ones(3,1),:);
 	eK = [eX,eY];%matrix to convert from oblique-angled microphones to cartesian
-	disp(eK);
 
 	%calculate components in given direction by angle1
 	eT = [cos(angle1);sin(angle1)];%matrix to convert from kartesian to target
 																		%angle
-	disp(eT);
 	weightMat = eK * eT;%weightMat.'*sig gives the signal in target direction
 
 	%TODO implement angle2 (angle of null), through weighted addition with sum
