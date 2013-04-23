@@ -30,7 +30,7 @@ $user =~ s/.*=//;
 #print "user name: $user\n";
 do {
 	#$procNum = `ps -u $user | grep dlabpro | wc -l`;
-	my @psResult = `ps -u $user`;
+	my @psResult = `ps -u $user`;#consider using pgrep instead
 	#print "ps returned:\n@psResult\n";
 	$procNum = grep(/dlabpro/,@psResult);
 	#print "procNum: $procNum\n";
