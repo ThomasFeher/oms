@@ -15,17 +15,18 @@ function [ out  options sigVecCard ] = adma(sigVecProc,freqVec,fs,options...
 											,speedOfSound)
 %% PARAMETER %%
 d = options.d;    %distance between microphones
+steeringMethod = options.steeringMethod;
 
-%Build cardioid signals
-sigVecCard = admaBuildCardioids(sigVecProc,freqVec,d,speedOfSound...
-													,options.doEqualization);
+%Build cardioid and eight signals
+[sigVecCard sigVecEight] = admaBuildCardioids(sigVecProc,freqVec,d...
+										,speedOfSound,options.doEqualization);
 
 no_speaker = false;
 %% Locate Speaker %%
 if (options.findMax)%use adaptive alogrithm to find speaker
 	search_range = options.search_range;
-	weights = admaParams(search_range, search_range+180);  %weights
-	if (isfield(options,'speaker_range'))     %use function with speaker_range
+	weights = admaParams(search_range, search_range+180,steeringMethod);%weights
+	if (isfield(options,'speaker_range'))%use function with speaker_range TODO don't use isfield
 		[theta power1 no_speaker] = admaFindMax2(sigVecSearch, ...
 			search_range, ...
 			weights, ...
@@ -45,7 +46,8 @@ if (options.findMax)%use adaptive alogrithm to find speaker
 		[theta1 power1] = admaFindMax(sigVecSearch, search_range, weights);
 		if (options.findMin)
 			search_range = (theta1+90):15:(theta1+270);
-			weights = admaParams(theta1*ones(size(search_range)),search_range);
+			weights = admaParams(theta1*ones(size(search_range)),search_range...
+															,steeringMethod);
 			[theta2] = admaFindMin(sigVecCard, search_range,weights);
 		else
 			theta2 = options.theta2;
@@ -59,7 +61,8 @@ else%do not use adaptive algo to find speaker
 	theta1 = options.theta1;
 	if (options.findMin)
 		search_range = (theta1+90):15:(theta1+270);
-		weights = admaParams(theta1*ones(size(search_range)),search_range);
+		weights = admaParams(theta1*ones(size(search_range)),search_range...
+															,steeringMethod);
 		[theta2] = admaFindMin(sigVecCard, search_range,weights)
 	else
 		theta2 = options.theta2;
@@ -81,11 +84,25 @@ else
 		theta1 = theta2+180;
 	end
 	%calculate weights
-	weights1 = admaParams(theta1, theta2);        %best pattern
-	%claculate output signals  
-	out(1,:) = weights1' * sigVecCard;       %best pattern 1
-	out(2,:) = weights1' * sigVecCard;       %best pattern 2
-	out(3,:) = 1/3*sum(sigVecCard);          %omni directional
+	weights1 = admaParams(theta1, theta2,steeringMethod);%best pattern
+	weightSphere = admaNullToSphereAndEight(theta1-theta2);%weight for adding
+					%sphere and eight, only used if steeringMethod = 'eights'
+	%calculate output signals  
+	out(3,:) = 1/3*sum(sigVecCard);%omni directional
+	if(strcmpi(steeringMethod,'cardioids'))
+		out(1,:) = weights1' * sigVecCard;%found pattern, will be overwritten
+											%with binary masked signal
+		out(2,:) = out(1,:);%found pattern, wit not be overwritten
+	elseif(strcmpi(steeringMethod,'eights'))
+		%eight pointing in right direction
+		out(1,:) = weights1.' * sigVecEight;%found pattern, will be overwritten
+											%with binary masked signal
+		%weighted addition of eight and sphere to result in desired pattern
+		out(1,:) = weightSphere*out(3,:) + (1-weightSphere)*out(1,:);
+		out(2,:) = out(1,:);%found pattern, will not be overwritten
+	else
+		error(['unknown steering method: ' steeringMethod]);
+	end
 	%% Apply binary mask to best pattern 1
 	if (options.Mask)
 		newMask = admaMask(options.mask_angle,sigVecProc,weights1,freqVec);
