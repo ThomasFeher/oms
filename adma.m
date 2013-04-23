@@ -26,7 +26,7 @@ no_speaker = false;
 if (options.findMax)%use adaptive alogrithm to find speaker
 	search_range = options.search_range;
 	weights = admaParams(search_range, search_range+180,steeringMethod);%weights
-	if (isfield(options,'speaker_range'))     %use function with speaker_range
+	if (isfield(options,'speaker_range'))%use function with speaker_range TODO don't use isfield
 		[theta power1 no_speaker] = admaFindMax2(sigVecSearch, ...
 			search_range, ...
 			weights, ...
@@ -98,7 +98,7 @@ else
 		out(1,:) = weights1.' * sigVecEight;%found pattern, will be overwritten
 											%with binary masked signal
 		%weighted addition of eight and sphere to result in desired pattern
-		%out(1,:) = weightSphere*out(3,:) + (1-weightSphere)*out(1,:);
+		out(1,:) = weightSphere*out(3,:) + (1-weightSphere)*out(1,:);
 		out(2,:) = out(1,:);%found pattern, will not be overwritten
 	else
 		error(['unknown steering method: ' steeringMethod]);

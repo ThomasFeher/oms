@@ -326,11 +326,13 @@ if(options.doADMA)
 	disp('adma processing ...');
 	%keyboard
 
-	if(options.adma.returnCardioids)
+	%export raw cardioid or eight signals
+	if(options.adma.returnCardioids|options.adma.returnEights)
 		[sigFullFd frequFull] = fftAndFrequ(signal,fs);
-		results.adma.cardioids = ifft(admaBuildCardioids(sigFullFd,frequFull...
-											,options.adma.d,options.c...
-											,options.adma.doEqualization).').';
+		[cardioidsFd eightsFd] = admaBuildCardioids(sigFullFd,frequFull...
+					,options.adma.d,options.c,options.adma.doEqualization).';
+		results.adma.cardioids = ifft(cardioidsFd).';
+		results.adma.eights = ifft(eightsFd).';
 	end
 
 	%initialize parameter
