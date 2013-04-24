@@ -3,6 +3,8 @@ tic
 more off;
 
 %%%%%init%%%%%
+%get path of oms framework
+omsDir = fileparts(mfilename('fullpath'));
 %create result dir
 resultDir = options.resultDir;
 if(~exist(resultDir,'dir'))
@@ -199,27 +201,29 @@ if(options.doSpeechRecognition)
 	model = options.speechRecognition.model;
 	db = options.speechRecognition.db;
 	disp('speech recognition...');
+	logFilename = fullfile(resultDir,'log.txt');%log speech recognition here
+	logFilename2 = fullfile(resultDir,'logExtern.txt');%copy external log file
+								%back to original machine with this file name
 	if(options.speechRecognition.doRemote&&...
 			~options.speechRecognition.doGetRemoteResults)
+		%TODO make remote host (eakss1) a config key
 		disp('copying files to remote machine...');
+		recognizerFilename = fullfile(omsDir,'speechRecognizer.pl');
 		system(['ssh eakss1 mkdir -p ' resultDir]);%create log dir on
 													%remote machine
 		system(['ssh eakss1 mkdir -p ' sigDir]);%create sig dir on remote
 													%machine
 		system(['scp ' sigDir '/*.* eakss1://' sigDir],'-echo');%copy files
-		disp(['running uasr on remote machine, see local logfile <'...
-			'log.txt' '>']);
-		system(['ssh eakss1 "nohup perl '...
-			' ~/sim/framework/speechRecognizer.pl ' sigDir ' '...
-			resultDir ' ' db ' ' model ' >' resultDir ...
-			'/log.txt 2>&1 </dev/null & "']);
+		disp(['running UASR on remote machine, see local logfile ' logFilename]);
+		system(['ssh eakss1 "nohup perl ' recognizerFilename ' ' sigDir ' '...
+			resultDir ' ' db ' ' model ' >' logFilename ' 2>&1 </dev/null & "']);
 		results.speechRecognition = speechRecogGetResults();
 	elseif(options.speechRecognition.doGetRemoteResults)
 		disp('copying result files from remote machine...');
-		disp(['scp eakss1://' resultDir '/log.txt ' resultDir '/log2.txt']);
-		system(['scp eakss1://' resultDir '/log.txt ' resultDir '/log2.txt'],'-echo');
+		disp(['scp eakss1://' logFilename ' ' logFilename2]);
+		system(['scp eakss1://' logFilename ' ' logFilename2],'-echo');
 		%read file
-		fid = fopen([resultDir '/log2.txt'],'r');
+		fid = fopen(logFilename2,'r');
 		lines = [];
 		while ~feof(fid)
 			line = fgets(fid);
