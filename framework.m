@@ -330,9 +330,9 @@ if(options.doADMA)
 	if(options.adma.returnCardioids|options.adma.returnEights)
 		[sigFullFd frequFull] = fftAndFrequ(signal,fs);
 		[cardioidsFd eightsFd] = admaBuildCardioids(sigFullFd,frequFull...
-					,options.adma.d,options.c,options.adma.doEqualization).';
-		results.adma.cardioids = ifft(cardioidsFd).';
-		results.adma.eights = ifft(eightsFd).';
+					,options.adma.d,options.c,options.adma.doEqualization);
+		results.adma.cardioids = ifft(cardioidsFd.').';
+		results.adma.eights = ifft(eightsFd.').';
 	end
 
 	%initialize parameter
