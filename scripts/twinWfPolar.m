@@ -2,16 +2,20 @@ clear
 addpath(fileparts(fileparts(mfilename('fullpath'))));
 addpath('~/epstk/m');
 
+options.inputSignals = ones(2,10);
 options.doConvolution = true;
+options.doTdRestore = true;
 options.irDatabaseSampleRate = 16000;
 options.irDatabaseName = 'twoChanMicHiRes';
 options.blockSize = 1024;
+options.timeShift = 512;
 resultDir = '/erk/tmp/feher/twinWfPolar_dist:0.05/';
 options.resultDir = resultDir;
 options.doTwinMicWienerFiltering = true;
 options.twinMic.wienerFilter.update = 1;
 sourceDist = 0.05;
 
+options.tmpDir = resultDir;
 distances = [0.05 0.1 0.15 0.2 0.3 0.4 0.5 0.75 1];
 angles = [0:15:180];
 for angleCnt = 1:numel(angles)
@@ -28,13 +32,13 @@ for angleCnt = 1:numel(angles)
 			snrAfterBF(distCnt,angleCnt)] = evalTwinMic(opt,result);
 
 	%%%%%output signal%%%%%
-	signal = transp(result.signal(:,:));
+	signal = result.signal(:,:).';
 	signal = signal(:,1)/max(abs(signal(:)));
 	wavName = sprintf('%s/sigBF_angle%03d_dist%01.2f.wav',...
 			resultDir,angles(angleCnt),distances(distCnt));
 	wavwrite(signal,opt.fs,wavName);
 
-	signal = transp(result.input.signal(:,:));
+	signal = result.input.signal(:,:).';
 	signal = signal/max(abs(signal(:)));
 	wavName = sprintf('%s/sigInput_%03d_dist%01.2f.wav',...
 			resultDir,angles(angleCnt),distances(distCnt));

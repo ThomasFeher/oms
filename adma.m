@@ -103,10 +103,12 @@ else
 	else
 		error(['unknown steering method: ' steeringMethod]);
 	end
-	%% Apply binary mask to best pattern 1
+
+	% Apply binary mask to pattern 1
+	%TODO in evaluation mode, the given mask is not applied to signal properly
+	%instead a new mask based on the evaluation signal is calculated
 	if (options.Mask)
 		newMask = admaMask(options.mask_angle,sigVecProc,weights1,freqVec);
-
 		if (options.oldMask ~= -1)
 			newMask = options.mask_update * newMask...
 				+ (1-options.mask_update) * options.oldMask;
