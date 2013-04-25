@@ -2,7 +2,7 @@ clear
 addpath(fileparts(fileparts(mfilename('fullpath'))));
 addpath('~/epstk/m');
 
-%TODO set input signals
+options.inputSignals = ones(2,10);
 options.doConvolution = true;
 options.doTdRestore = true;
 options.irDatabaseSampleRate = 16000;
