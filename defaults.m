@@ -15,6 +15,8 @@ defaultOptions.logIdDigits = 6;
 %%%%%logging%%%%%
 
 %%%%%misc%%%%%
+defaultOptions.tmpDir = './';
+defaultOptions.resultDir = './';
 defaultOptions.c = 340;
 defaultOptions.debug = false;%only used for debugging
 %%%%%misc%%%%%
@@ -193,8 +195,6 @@ defaultOptions.speechRecognition.db = 'samurai';%'samurai', 'apollo'
 defaultOptions.speechRecognition.model = '3_15';
 %%%%%speech recognition%%%%%
 
-defaultOptions.tmpDir = '~/tmp/';
-defaultOptions.resultDir = '/erk/home/feher/Simulationen/ergebnisse/last/';
 defaultOptions.sourceLocOptions.frequLow = 0;
 defaultOptions.sourceLocOptions.frequHigh = inf;
 
