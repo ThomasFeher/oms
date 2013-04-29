@@ -51,4 +51,4 @@ pattern(pattern<plotMin) = plotMin;%cut very low values
 pattern = pattern - plotMin;%make lowest value 0dB
 angles = results.beamforming.beampattern.teta;
 %polar([0:180]/180*pi,pattern);%plot
-plot(angles,pattern);
+%plot(angles,pattern);

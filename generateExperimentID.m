@@ -4,7 +4,8 @@ if(~isfield(options,'tmpDir'))
 	error('no path for temporary files specified');
 end
 if(~exist(options.tmpDir,'dir'))
-	error(sprintf('directory for temporary files: %s does not exist',...
+	error(sprintf(['directory for temporary files: %s does not exist.'...
+			'Please set options.tmpDir to an existing directory.'],...
 			options.tmpDir));
 end
 
