@@ -139,50 +139,6 @@ defaultOptions.sortCorrBlock.corrThreshold = 0.8;
 defaultOptions.sortList = {};
 %%%%%ICA%%%%%
 
-%%%%%RPM estimation%%%%%
-defaultOptions.doRpmEstimation = false;
-%algorithm, autoCorrFrequ is best
-%['peakMeanRatio' 'maxLhHisto' 'autoCorrFrequ' 'autoCorrTime']
-defaultOptions.rpmEstimation.algo = 'autoCorrFrequ';
-%upper limit for rpm value
-defaultOptions.rpmEstimation.rpmHigh = 5000;
-%lower limit for rpm value
-defaultOptions.rpmEstimation.rpmLow = 500;
-%upper frequency to be processd in Hz
-defaultOptions.rpmEstimation.frequHigh = 500;
-%lowest possible frequency in Hz
-defaultOptions.rpmEstimation.frequLow = 10;
-defaultOptions.rpmEstimation.histRes = 1;%histogram resolution in Hz
-%number of loudest/best frequencies to use
-defaultOptions.rpmEstimation.candNum = 10;
-%cut out low energy spectral values
-defaultOptions.rpmEstimation.doSpecEnhance = false;
-%all spectral values below maximum*specEnhanceThreshold are set to zero
-defaultOptions.rpmEstimation.specEnhanceThreshold = 0.7;
-%likelihood function to rate frequency
-defaultOptions.rpmEstimation.maxLhHisto.mu = 10; %in Hz
-defaultOptions.rpmEstimation.maxLhHisto.sigma = 10; %in Hz
-defaultOptions.rpmEstimation.peakMeanRatio.peakMeanRatio = 0.5; %in Hz
-defaultOptions.rpmEstimation.smoothAlgo = 'mean';%'mean' or 'median'
-%defaultOptions.rpmEstimation.autoCorr.algo = 'frequ';%['frequ' 'time' 'gccPhat']
-%number of values for smoothing, 1 means no smoothing
-defaultOptions.rpmEstimation.smoothNum = 1; 
-%do a linear prediction with that number of previous results
-%to narrow the list of candidates
-%if set to zero, no prediction is done at all
-defaultOptions.rpmEstimation.predictionCoeffNum = 0;
-%range where values must lie in to be accepted by linear prediction algorithm
-%[predictValue-predictionRange <= predictValue <= predictValue+predictionRange]
-defaultOptions.rpmEstimation.predictionRange = 100;
-%use a histogram to select among candidates
-defaultOptions.rpmEstimation.doHistogram = false;
-%car information
-defaultOptions.rpmEstimation.useCarInformation = false;
-defaultOptions.rpmEstimation.za = 4; %cylinders
-defaultOptions.rpmEstimation.m = 0.5; %motor type(1:two-stroke,0.5:four-stroke)
-defaultOptions.rpmEstimation.gz = 1; %simultaniously fired cylinders
-%%%%%RPM estimation%%%%%
-
 %%%%%speech recognition%%%%%
 defaultOptions.doSpeechRecognition = false;
 defaultOptions.speechRecognition.doRemote = false;%start recognizer on eakss1 and
