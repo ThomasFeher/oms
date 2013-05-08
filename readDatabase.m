@@ -67,7 +67,7 @@ function [outData signalSingle inputSignals FsSig geometry] = readDatabase...
 	end
 
 	%load impulse responses
-	switch(databaseName)
+	switch(databaseName)%TODO call function with this name directly (str2func)
 	case('terminal')
 		if(nargin<3) %use standard values
 			databaseParam = struct('distance', 0.8,'angle',0,'room','refRaum');
@@ -89,15 +89,18 @@ function [outData signalSingle inputSignals FsSig geometry] = readDatabase...
 			databaseParam = struct('distance', 4,'room','museum');
 		end
 		[impulseResponses FsIR micNum geometry] = fourMic(databaseParam,sampleRate);
-  case({'3chanDMA' 'threeChanDMA'})
+	case({'3chanDMA' 'threeChanDMA'})
 		if(nargin<3) %use standard values
 			databaseParam = struct('distance', 4,'room','studio');
 		end
 		[impulseResponses FsIR micNum geometry] = ThreeChanDMA(databaseParam,sampleRate);
-  otherwise
-		error(sprintf('unknown database name "%s"',databaseName));
-  end
-  
+	otherwise
+		%try calling the database name as function
+		databaseHandle = str2func(databaseName);
+		[impulseResponses FsIR micNum geometry] = databaseHandel(databaseParam);
+		%error(sprintf('unknown database name "%s"',databaseName));
+	end
+
 	if(strcmp(micsToLoad,'all'))
 		micsToLoad = [1:micNum];
 	elseif(any(micsToLoad>micNum))
