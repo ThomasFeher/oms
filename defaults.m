@@ -32,6 +32,7 @@ defaultOptions.irDatabaseName = 'terminal';%available databases: 'terminal',
 											%'fourMic','threeChanDMA'
 defaultOptions.irDatabaseSampleRate = 16000;
 defaultOptions.irDatabaseChannels = 'all'; % = [2 3];
+defaultOptions.irDatabase.dir = '.';
 defaultOptions.impulseResponses =...
 		struct('angle',{0 90},'distance',0.8,'room','refRaum');
 %%%%%input signals%%%%%
@@ -71,7 +72,7 @@ defaultOptions.twinMic.nullSteering.angle = 90; %in degree, only for fix algo
 defaultOptions.twinMic.nullSteering.mu = 0.01; %learning rate, only NLMS!
 defaultOptions.twinMic.nullSteering.alpha = 0; %only NLMS!
 defaultOptions.twinMic.nullSteering.update = 0.1; %only ICA!
-defaultOptions.twinMic.nullSteering.iterations = 1;
+defaultOptions.twinMic.nullSteering.iterations = 1;%only ICA!
 defaultOptions.twinMic.wienerFilter.update = 1;
 %%%%%Twin Microphone%%%%%
 

@@ -13,14 +13,16 @@
 		%microphones that shall be used. e.g. [2 3 4] to use second, third and
 		%fourth microphone
 %@param sampleRate sample rate in Hz
+%@param databasesDir root dir for databases
 %TODO possibility to change database directory via option parameter, solution
 % 	in threeChanMic is not so good
 
 function [outData signalSingle inputSignals FsSig geometry] = readDatabase...
-		(databaseName,inSigNames,databaseParam,micsToLoad, sampleRate)
+		(databaseName,inSigNames,databaseParam,micsToLoad, sampleRate...
+		,databasesDir)
 	usage = [['usage: readDatabase(databaseName,inSigNames']...
 			['[,databaseParam,micsToLoad])']];
-	if(nargin<2||nargin>5)
+	if(nargin<2||nargin>6)
 		error(usage);
 	end
 	if(nargin<5)
@@ -80,8 +82,8 @@ function [outData signalSingle inputSignals FsSig geometry] = readDatabase...
 		if(nargin<3) %use standard values
 			databaseParam = struct('distance', 0.5,'angle',0,'room','refRaum');
 		end
-		[impulseResponses FsIR micNum geometry]=twoChanMicHiRes(databaseParam,...
-																sampleRate);
+		[impulseResponses FsIR micNum geometry]...
+				= twoChanMicHiRes(databaseParam,sampleRate,databasesDir);
 	case({'4MicArray' 'fourMicArray' '4Mic' 'fourMic'})
 		if(nargin<3) %use standard values
 			databaseParam = struct('distance', 4,'room','museum');
@@ -313,7 +315,8 @@ function [impulseResponses Fs micNum geometry] = twoChanMic(param)
 	end
 end
 
-function [impulseResponses Fs micNum geometry] = twoChanMicHiRes(param,fs)
+function [impulseResponses Fs micNum geometry] = twoChanMicHiRes(param,fs...
+																	,baseDir)
 	if(nargin<2)
 		fs = 16000;
 	end
@@ -327,7 +330,7 @@ function [impulseResponses Fs micNum geometry] = twoChanMicHiRes(param,fs)
 		error('required field "room" missing');
 	end
 
-	databaseDir = '/erk/daten1/uasr-data-feher/audio/Impulsantworten/2ChanMicHiRes/';
+	databaseDir = fullfile(baseDir,'2ChanMicHiRes');
 	micNum = 2;
 	correctionCoeff = [0 2.66]; %correction coefficient per channel in dB
 	geometry = [-0.0085 0.0085;zeros(2,2)];
@@ -367,9 +370,10 @@ function [impulseResponses Fs micNum geometry] = twoChanMicHiRes(param,fs)
 					param(srcCnt).angle,srcCnt));
 		end
 
-		fileString = sprintf('%s%s/%s/%03d_%03d',databaseDir,...
-		param(srcCnt).room,irDir,param(srcCnt).angle,distance);
-  
+		fileString = sprintf('%s/%s/%03d_%03d',param(srcCnt).room,irDir...
+												,param(srcCnt).angle,distance);
+		fileString = fullfile(databaseDir,fileString);
+
 		[impulseResponse1 Fs] = wavread([fileString '_1' '.wav']);
 		[impulseResponse2 Fs] = wavread([fileString '_2' '.wav']);
 		impulseResponse = [impulseResponse1 impulseResponse2];
@@ -534,8 +538,6 @@ function [impulseResponses Fs micNum geometry] = ThreeChanDMA(param,fs)
 		end
 	end
 end
-
-
 
 function out = ismatrix(in)
 	out = false;
