@@ -8,9 +8,9 @@ close all;
 addpath(fileparts(fileparts(mfilename('fullpath'))));
 
 %% SETTINGS
-resultDir = '/erk/tmp/feher/speechRecogAdapt2/';
+resultDir = '/erk/tmp/feher/twinDistAdapt/';
 tmpDir = resultDir;
-sigDir = [resultDir 'audio'];
+sigDir = fullfile(resultDir,'dist111');
 logDir = sigDir;
 logFile = 'log2.txt';%log file name for remote processing, otherwise not used
 
@@ -19,19 +19,19 @@ distance = 0.4;
 speaker_angle = 0;
 shortSet = false;%process only first <shortSetNum> files
 shortSetNum = 0;
-mic = 'three';%'twin', 'three', 'orig'
-algo = 'sphere';%'sphere','adma','binMask'
+mic = 'twin';%'twin', 'three', 'orig'
+algo = 'dist';%'sphere','adma','binMask','dist'
 withLabels = true;%phoneme labels are used to find phoneme positions
 doRemoteUasr = true;%will execute uasr on eakss1
-doConvolution = true;%if false, data in sigDir will be used directly
+doConvolution = false;%if false, data in sigDir will be used directly
 room = 'studio';%'studio' or 'refRaum' 
-%extPlus = 'noise_label';%additional extension string,
+extPlus = 'noise_label';%additional extension string,
 						%will be appended at final string
 %%%%%PARAMETER%%%%%
 
 dbDir='/erk/daten2/uasr-data-common/ssmg/common/';
-filelistPath = [dbDir 'flists/SAMURAI_0_adp.flst'];
-signalPath = [dbDir '/sig'];
+filelistPath = fullfile(dbDir,'flists/SAMURAI_0_adp.flst');
+signalPath = fullfile(dbDir,'/sig');
 fId = fopen(filelistPath);
 fileList = textscan(fId,'%s %s');
 fclose(fId);
@@ -40,7 +40,7 @@ if(shortSet&&shortSetNum<fileNum) fileNum=shortSetNum;end
 if(~exist(tmpDir,'dir')) mkdir(tmpDir); end
 if(~exist(resultDir,'dir')) mkdir(resultDir); end
 if(~exist(sigDir,'dir')) mkdir(sigDir); end
-diary([resultDir 'log.txt']);
+diary(fullfile(resultDir,'log.txt'));
 %generate model appendix
 micText = lower(mic);
 angleText = sprintf('%03d',speaker_angle);
@@ -58,6 +58,14 @@ elseif(strcmpi(algo,'adma'))
 elseif(strcmpi(algo,'binMask'))
 	doBinMask = true;
 	algo = 'binMask'
+elseif(strcmpi(algo,'wiener'))
+	algo = 'wiener';
+	warning('just adapting, processing not implemented')
+	doConvolution = false;
+elseif(strcmpi(algo,'dist'))
+	algo = 'dist';
+	warning('just adapting, processing not implemented')
+	doConvolution = false;
 else
 	error(['unknown algorithm: ' algo]);
 end
@@ -66,6 +74,9 @@ extension = ['A_' micText '_' angleText '_' algo];%generate string
 if(exist('extPlus','var'))
 	extension = [extension '_' extPlus];
 end
+
+%get path of oms framework on remote machine
+omsDir = fileparts(mfilename('fullpath'));
 
 if(doConvolution)
 	for fileCnt=1:fileNum
@@ -153,9 +164,11 @@ if(doRemoteUasr)
 	disp(['Model file extension will be: ' extension]);
 	disp(['running uasr on remote machine, see local logfile <'...
 		logDir '/' logFile '>']);
-	system(['ssh eakss1 "nohup ~/sim/framework/scripts/speechRecogAdapt.sh '...
-		configName ' ' logDir ' ' logFile ' ' sigDir ' ' extension...
-		' >/dev/null 2>&1 </dev/null &"']);
+	callString = ['ssh eakss1 "nohup ' fullfile(omsDir,'speechRecogAdapt.sh')...
+		' ' configName ' ' logDir ' ' logFile ' ' sigDir ' ' extension...
+		' >/dev/null 2>&1 </dev/null &"'];
+	disp(callString);
+	system(callString);
 	%direct invocation of dlabpro on remote machine seems not to work
 	%system(['ssh eakss1 "nohup dlabpro ~/uasr/scripts/dlabpro/HMM.xtp adp' ...
 						   %' ~/uasr-data/ssmg/common/info/' configName ...
