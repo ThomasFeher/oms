@@ -55,14 +55,22 @@ function [outData signalSingle inputSignals FsSig geometry] = readDatabase...
 		if(~isstruct(databaseParam))
 			error('databaseParam must be a structure or structure array');
 		end
-		if(sigNum==1)
-			if(numel(databaseParam)~=1);
-				error(sprintf([['number of input signals (%d) and database']...
-				[' parameters (%d) not matching']],sigNum,numel(databaseParam)));
+		%if(sigNum==1)
+			%if(numel(databaseParam)~=1);
+				%error(sprintf([['number of input signals (%d) and database']...
+				%[' parameters (%d) not matching']],sigNum,numel(databaseParam)));
+			%end
+		%elseif(numel(databaseParam)~=sigNum)
+			%error(sprintf([['number of input signals (%d) and database']...
+			%[' parameters (%d) not matching']],sigNum,numel(databaseParam)));
+		%end
+		if(numel(databaseParam)~=sigNum)
+			if(numel(databaseParam)==1)%use params for all channels
+				databaseParam(1:sigNum) = struct(databaseParam);
+			else
+				error(sprintf(['number of input signals (%d) and database '...
+				'parameters (%d) not matching'],sigNum,numel(databaseParam)));
 			end
-		elseif(numel(databaseParam)~=sigNum)
-			error(sprintf([['number of input signals (%d) and database']...
-			[' parameters (%d) not matching']],sigNum,numel(databaseParam)));
 		end
 	end
 
@@ -96,8 +104,11 @@ function [outData signalSingle inputSignals FsSig geometry] = readDatabase...
 		[impulseResponses FsIR micNum geometry] = ThreeChanDMA(databaseParam,sampleRate);
 	otherwise
 		%try calling the database name as function
-		databaseHandle = str2func(databaseName);
-		[impulseResponses FsIR micNum geometry] = databaseHandel(databaseParam);
+		databaseHandle = str2func(['load' databaseName]);
+		options.params = databaseParam;
+		options.dir = databasesDir;
+		options.fs = sampleRate;
+		[impulseResponses FsIR micNum geometry] = databaseHandle(options);
 		%error(sprintf('unknown database name "%s"',databaseName));
 	end
 
