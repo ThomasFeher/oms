@@ -74,6 +74,10 @@ defaultOptions.twinMic.nullSteering.alpha = 0; %only NLMS!
 defaultOptions.twinMic.nullSteering.update = 0.1; %only ICA!
 defaultOptions.twinMic.nullSteering.iterations = 1;%only ICA!
 defaultOptions.twinMic.wienerFilter.update = 1;
+defaultOptions.twinMic.wienerFilter.signalPlusNoiseEstimate = 'cardioid';
+						%'sphere' or 'cardioid' (means front cardioid)
+defaultOptions.twinMic.wienerFilter.signalToFilter = 'cardioid';%'cardioid'
+											%(means front cardioid) or 'sphere'
 %%%%%Twin Microphone%%%%%
 
 %%%%%beamforming%%%%%
