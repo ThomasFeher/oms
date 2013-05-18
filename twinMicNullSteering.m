@@ -5,9 +5,13 @@
 function [sigVecNew angleNew] = twinMicNullSteering(options,sigVec,block,coeffNS)
 switch options.twinMic.nullSteering.algorithm
 case {'fix','FIX','Fix'}
-	betaNew = angle2beta(options.twinMic.nullSteering.angle);
-	sigVecNew = [sigVec(1,:)-betaNew*sigVec(2,:);sigVec(1,:)];
-	angleNew = options.twinMic.nullSteering.angle;
+	%betaNew = angle2beta(options.twinMic.nullSteering.angle);
+	%sigVecNew = [sigVec(1,:)-betaNew*sigVec(2,:);sigVec(1,:)];
+	%angleNew = options.twinMic.nullSteering.angle;
+	weight = admaNullAngleToCardioidCoeffs(options.twinMic.nullSteering.angle);
+	sigVecNew(1,:) = weight * sigVec(1,:) - (1-weight) * sigVec(2,:);
+	sigVecNew(2,:) = sum(sigVec);%sphere signal to second channel
+	angleNew = options.twinMic.nullSteering.angle;%angle stays always the same
 
 case {'NLMS','nlms'}
 	mu = options.twinMic.nullSteering.mu;%*options.blockSize;
