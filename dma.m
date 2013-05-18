@@ -1,6 +1,8 @@
 %differential microfone array
 %from Teutsch and Elko, "First- and Second-Order Adaptive Differential
 %Microphone Arrays"
+%takes signals of two omnidirectional microphones and combines them to one
+%signal with a zero a certain angle
 function sigVecNew = dma(options,sigVec)
 angle = options.dma.angle/180*pi;
 frequencies = options.frequency;
