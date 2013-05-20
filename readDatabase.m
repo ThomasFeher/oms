@@ -14,8 +14,9 @@
 		%fourth microphone
 %@param sampleRate sample rate in Hz
 %@param databasesDir root dir for databases
-%TODO possibility to change database directory via option parameter, solution
-% 	in threeChanMic is not so good
+%TODO possibility to change database directory via option parameter, as in
+%twoChanMicHiRes
+%TODO call all database read functions via string
 
 function [outData signalSingle inputSignals FsSig geometry] = readDatabase...
 		(databaseName,inSigNames,databaseParam,micsToLoad, sampleRate...
@@ -308,8 +309,12 @@ function [impulseResponses Fs micNum geometry] = twoChanMic(param)
 
 		fileString = sprintf('%s%s/IR16kHz/%s%03d',databaseDir,...
 				param(srcCnt).room,distanceString,param(srcCnt).angle);
-		[impulseResponse1 Fs] = wavread([fileString '_1' '.wav']);
-		[impulseResponse2 Fs] = wavread([fileString '_2' '.wav']);
+		fileString1 = [fileString '_1' '.wav'];
+		fileString2 = [fileString '_2' '.wav'];
+		disp(['reading file: ' fileString1]);
+		[impulseResponse1 Fs] = wavread(fileString1);
+		disp(['reading file: ' fileString2]);
+		[impulseResponse2 Fs] = wavread(fileString2);
 		impulseResponse = [impulseResponse1 impulseResponse2];
 		if(size(impulseResponse,1)>maxSize)
 			maxSize = size(impulseResponse,1);
@@ -387,9 +392,13 @@ function [impulseResponses Fs micNum geometry] = twoChanMicHiRes(param,fs...
 		fileString = sprintf('%s/%s/%03d_%03d',param(srcCnt).room,irDir...
 												,param(srcCnt).angle,distance);
 		fileString = fullfile(databaseDir,fileString);
+		fileString1 = [fileString '_1' '.wav'];
+		fileString2 = [fileString '_2' '.wav'];
 
-		[impulseResponse1 Fs] = wavread([fileString '_1' '.wav']);
-		[impulseResponse2 Fs] = wavread([fileString '_2' '.wav']);
+		disp(['reading file: ' fileString1]);
+		[impulseResponse1 Fs] = wavread(fileString1);
+		disp(['reading file: ' fileString2]);
+		[impulseResponse2 Fs] = wavread(fileString2);
 		impulseResponse = [impulseResponse1 impulseResponse2];
 		if(size(impulseResponse,1)>maxSize)
 			maxSize = size(impulseResponse,1);
