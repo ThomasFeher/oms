@@ -6,6 +6,11 @@
 	%sigFd: signal in frequency domain [channel,sample]
 	%frequ: vector of frequencies corresponding to sigFd
 function [sigFd frequ] = fftAndFrequ(sig,fs)
+usage = 'usage: fftAndFrequ(signal,fs)';
+if(nargin<2)
+	error(usage);
+end
+
 sigFd = fft(sig.').';
 fftSize = size(sigFd,2);
 frequ = fs/2 * linspace(0,1,fftSize/2+1);
