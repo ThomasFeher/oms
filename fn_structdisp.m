@@ -32,19 +32,15 @@ function rec_structdisp(Xname,X)
 
 %-- PARAMETERS (Edit this) --%
 
-ARRAYMAXROWS = 10;
-ARRAYMAXCOLS = 10;
-ARRAYMAXELEMS = 30;
-CELLMAXROWS = 10;
-CELLMAXCOLS = 10;
-CELLMAXELEMS = 30;
+ARRAYMAXROWS = inf;
+ARRAYMAXCOLS = inf;
+ARRAYMAXELEMS = inf;
+CELLMAXROWS = inf;
+CELLMAXCOLS = inf;
+CELLMAXELEMS = inf;
 CELLRECURSIVE = true;
 
 %----- PARAMETERS END -------%
-
-%disp([Xname ':'])
-%disp(X)
-%fprintf('\n');
 
 if isstruct(X)
     F = fieldnames(X);
@@ -87,15 +83,21 @@ for i=1:nsub
         if size(a,1)<=CELLMAXROWS && size(a,2)<=CELLMAXCOLS && numel(a)<=CELLMAXELEMS
             rec_structdisp(subnames{i},a)
         end
-    %elseif size(a,1)>1 && size(a,1)<=ARRAYMAXROWS && size(a,2)<=ARRAYMAXCOLS && numel(a)<=ARRAYMAXELEMS
-        %disp([subnames{i} ':'])
-        %disp(a)
 	elseif ischar(a)
 		disp([subnames{i} ' = ' a]);
 	elseif isscalar(a)
 		disp([subnames{i} ' = ' num2str(a)]);
+	%if is linearly spaced vector with more than 2 elements
+	elseif (numel(find(size(a)>1))==1 ...one dim > 1
+				&& numel(a)>2 ... more than 2 elements
+				&& all(a == linspace(a(1),a(end),numel(a)))) %linearly spaced
+		disp([subnames{i} ' = ' num2str(a(1)) ':'...
+								num2str((a(end)-a(1))/(numel(a)-1)) ':'...
+								num2str(a(end))]);
+	elseif size(a,1)>1 && size(a,1)<=ARRAYMAXROWS && size(a,2)<=ARRAYMAXCOLS && numel(a)<=ARRAYMAXELEMS
+		disp([subnames{i} ':'])
+		disp(a)
 	elseif length(a) > 1
-		%rec_structdisp([subnames{i} '(' num2str(k) ')'],a(k));
 		disp([subnames{i} ' = ' num2str(a(:).')]);
     end
 end
