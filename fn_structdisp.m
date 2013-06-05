@@ -88,8 +88,8 @@ for i=1:nsub
 	elseif isscalar(a)
 		disp([subnames{i} ' = ' num2str(a)]);
 	%if is linearly spaced vector with more than 2 elements
-	elseif (numel(find(size(a)>1))==1 ...one dim > 1
-				&& numel(a)>2 ... more than 2 elements
+	elseif (numel(find(size(a)>1))==1 ...%one dim > 1
+				&& numel(a)>2 ...%more than 2 elements
 				&& all(a == linspace(a(1),a(end),numel(a)))) %linearly spaced
 		disp([subnames{i} ' = ' num2str(a(1)) ':'...
 								num2str((a(end)-a(1))/(numel(a)-1)) ':'...
