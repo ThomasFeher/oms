@@ -4,7 +4,9 @@
 		%each column is a time point
 %@param databaseName string containing the name of the database
 %@param inSigNames cell array with absolute or relative paths and file names
-		%of the input signals
+		%of the input signals or
+		%an array contain sampled signal values with each row containing one
+		%signal
 %@param databaseParam struct array with fields 'distance' and 'angle' for each
 		%source; it may also include the field 'level' that determains the
 		%desired levels relative to each other in dB, if this field does not
@@ -21,8 +23,8 @@
 function [outData signalSingle inputSignals FsSig geometry] = readDatabase...
 		(databaseName,inSigNames,databaseParam,micsToLoad, sampleRate...
 		,databasesDir)
-	usage = [['usage: readDatabase(databaseName,inSigNames']...
-			['[,databaseParam,micsToLoad])']];
+	usage = ['usage: readDatabase(databaseName,inSigNames'...
+	         '[,databaseParam,micsToLoad])'];
 	if(nargin<2||nargin>6)
 		error(usage);
 	end
@@ -38,9 +40,10 @@ function [outData signalSingle inputSignals FsSig geometry] = readDatabase...
 		error('databaseName must be a character array');
 	end
 	if(~ischar(inSigNames)&&~iscell(inSigNames)&&~ismatrix(inSigNames))
-		error([['inSigNames must be a character array (in case of one input file']...
-			['signal) or a cell array of character arrays (for multiple input files']...
-			['or an array, where each row is one input signal']]);
+		error(['inSigNames must be a character array (in case of one input '...
+		       'file signal) or a cell array of character arrays (for '...
+			   'multiple input files or an array, where each row is one '...
+			   'input signal']);
 	end
 	if(ischar(inSigNames))
 		sigNum = 1;
@@ -56,15 +59,6 @@ function [outData signalSingle inputSignals FsSig geometry] = readDatabase...
 		if(~isstruct(databaseParam))
 			error('databaseParam must be a structure or structure array');
 		end
-		%if(sigNum==1)
-			%if(numel(databaseParam)~=1);
-				%error(sprintf([['number of input signals (%d) and database']...
-				%[' parameters (%d) not matching']],sigNum,numel(databaseParam)));
-			%end
-		%elseif(numel(databaseParam)~=sigNum)
-			%error(sprintf([['number of input signals (%d) and database']...
-			%[' parameters (%d) not matching']],sigNum,numel(databaseParam)));
-		%end
 		if(numel(databaseParam)~=sigNum)
 			if(numel(databaseParam)==1)%use params for all channels
 				databaseParam(1:sigNum) = struct(databaseParam);
@@ -97,12 +91,14 @@ function [outData signalSingle inputSignals FsSig geometry] = readDatabase...
 		if(nargin<3) %use standard values
 			databaseParam = struct('distance', 4,'room','museum');
 		end
-		[impulseResponses FsIR micNum geometry] = fourMic(databaseParam,sampleRate);
+		[impulseResponses FsIR micNum geometry] = fourMic(databaseParam...
+		                                                 ,sampleRate);
 	case({'3chanDMA' 'threeChanDMA'})
 		if(nargin<3) %use standard values
 			databaseParam = struct('distance', 4,'room','studio');
 		end
-		[impulseResponses FsIR micNum geometry] = ThreeChanDMA(databaseParam,sampleRate);
+		[impulseResponses FsIR micNum geometry] = ThreeChanDMA(databaseParam...
+		                                                      ,sampleRate);
 	otherwise
 		%try calling the database name as function
 		databaseHandle = str2func(['load' databaseName]);
@@ -110,7 +106,6 @@ function [outData signalSingle inputSignals FsSig geometry] = readDatabase...
 		options.dir = databasesDir;
 		options.fs = sampleRate;
 		[impulseResponses FsIR micNum geometry] = databaseHandle(options);
-		%error(sprintf('unknown database name "%s"',databaseName));
 	end
 
 	if(strcmp(micsToLoad,'all'))
@@ -130,9 +125,11 @@ function [outData signalSingle inputSignals FsSig geometry] = readDatabase...
 			[inputSignals FsSig] = loadSignal(inSigNames);
 		else %multiple signals
 			for cnt=1:sigNum
-				[inputSignalsUnequal{cnt} Fs(cnt)] = loadSignal(inSigNames{cnt});
+				[inputSignalsUnequal{cnt} Fs(cnt)] = loadSignal...
+				                                             (inSigNames{cnt});
 				if(~isvector(inputSignalsUnequal{cnt}))
-					error(sprintf('input signal %s is not mono'),inSigNames{cnt});
+					error(sprintf('input signal %s is not mono')...
+					                                         ,inSigNames{cnt});
 				end
 				if(numel(inputSignalsUnequal{cnt})>maxLength)
 					maxLength = numel(inputSignalsUnequal{cnt});
@@ -145,43 +142,44 @@ function [outData signalSingle inputSignals FsSig geometry] = readDatabase...
 			end
 		end
 		if(FsIR~=FsSig)
-			error(sprintf([['samplerate mismatch between input signals (%d) ']...
-				['and impulse response database (%d)']],FsSig,FsIR));
+			error(sprintf(['samplerate mismatch between input signals (%d) '...
+			               'and impulse response database (%d)'],FsSig,FsIR));
 		end
 	else
 		inputSignals = inSigNames;
 		FsSig = FsIR;
-  end
+	end
 	%make input signals' length equal
-  if(exist('inputSignalsUnequal','var'))
-    if ((~isfield(databaseParam,'length')) || (databaseParam(1).length == 0)) %default: longest signal
-      sigLength = maxLength;
-    elseif (databaseParam(1).length == -1)
-      sigLength = numel(inputSignalsUnequal{1});
-    else
-      sigLength = FsSig * databaseParam(1).length;
-    end
-    disp(sprintf('sigLength = %d samples',sigLength));
-    inputSignals = zeros(sigNum,sigLength);
-    for sigCnt=1:sigNum
-      thisLength = size(inputSignalsUnequal{sigCnt},2);
-      if(thisLength<sigLength)
-        zeropad = zeros(1,sigLength-thisLength);
-        inputSignals(sigCnt,:) = [inputSignalsUnequal{sigCnt} zeropad];
-      else
-        inputSignals(sigCnt,:) = inputSignalsUnequal{sigCnt}(1:sigLength);
-      end
-    end
-  else
-    sigLength = size(inputSignals,2);
-  end
+	if(exist('inputSignalsUnequal','var'))
+		%default: longest signal
+		if ((~isfield(databaseParam,'length'))||(databaseParam(1).length == 0))
+			sigLength = maxLength;
+		elseif (databaseParam(1).length == -1)
+			sigLength = numel(inputSignalsUnequal{1});
+		else
+			sigLength = FsSig * databaseParam(1).length;
+		end
+		disp(sprintf('sigLength = %d samples',sigLength));
+		inputSignals = zeros(sigNum,sigLength);
+		for sigCnt=1:sigNum
+			thisLength = size(inputSignalsUnequal{sigCnt},2);
+			if(thisLength<sigLength)
+				zeropad = zeros(1,sigLength-thisLength);
+				inputSignals(sigCnt,:) = [inputSignalsUnequal{sigCnt} zeropad];
+		  else
+			  inputSignals(sigCnt,:) = inputSignalsUnequal{sigCnt}(1:sigLength);
+		  end
+		end
+	else
+		sigLength = size(inputSignals,2);
+	end
 
 	%adjust signal levels if needed
 	if(isfield(databaseParam,'level')&&sigNum>1)
 		for sigCnt=2:sigNum
 			level = databaseParam(sigCnt).level - databaseParam(1).level;
 			inputSignals(sigCnt,:)=signalLeveler(inputSignals(1,:),...
-					inputSignals(sigCnt,:),level);
+			                                     inputSignals(sigCnt,:),level);
 		end
 	end
 
@@ -297,11 +295,11 @@ function [impulseResponses Fs micNum geometry] = twoChanMic(param)
 					param(srcCnt).room,srcCnt));
 		end
 		if(~any(param(srcCnt).distance==distanceList{1}))
-			error(sprintf('wrong distance (%f) in databaseParam(%d).distance',...
-					param(srcCnt).distance,srcCnt));
+			error(sprintf('wrong distance (%f) in databaseParam(%d).distance'...
+			                                  ,param(srcCnt).distance,srcCnt));
 		end
-		distanceString = distanceList{find(param(srcCnt).distance==...
-				distanceList{1})+1};
+		distanceString = distanceList{find(param(srcCnt).distance...
+		                                                 ==distanceList{1})+1};
 		if(~any(param(srcCnt).angle==angleList))
 			error(sprintf('wrong angle (%d) in databaseParam(%d).angle',...
 					param(srcCnt).angle,srcCnt));
@@ -335,7 +333,7 @@ function [impulseResponses Fs micNum geometry] = twoChanMic(param)
 end
 
 function [impulseResponses Fs micNum geometry] = twoChanMicHiRes(param,fs...
-																	,baseDir)
+                                                                ,baseDir)
 	if(nargin<2)
 		fs = 16000;
 	end
@@ -365,18 +363,18 @@ function [impulseResponses Fs micNum geometry] = twoChanMicHiRes(param,fs...
 	case(48000)
 		irDir = 'IR';
 	otherwise
-		error(sprintf([['Database \"2ChanMicHighRes\" does not support %d']...
-				['Hz sample rate']],fs));
+		error(sprintf(['Database \"2ChanMicHighRes\" does not support %d'...
+		               'Hz sample rate'],fs));
 	end
 
 	for srcCnt=1:srcNum
 		if(~any(strcmp(param(srcCnt).room,roomlist)))
-			error(sprintf('wrong room name (%s) in databaseParam(%d).room',...
-					param(srcCnt).room,srcCnt));
+			error(sprintf('wrong room name (%s) in databaseParam(%d).room'...
+			                                      ,param(srcCnt).room,srcCnt));
 		end
 		if(~any(param(srcCnt).distance==distanceList{1}))
-			error(sprintf('wrong distance (%f) in databaseParam(%d).distance',...
-					param(srcCnt).distance,srcCnt));
+			error(sprintf('wrong distance (%f) in databaseParam(%d).distance'...
+			                                  ,param(srcCnt).distance,srcCnt));
 		end
 		distance = distanceList{2}(find(param(srcCnt).distance==...
 				distanceList{1}));
@@ -385,12 +383,12 @@ function [impulseResponses Fs micNum geometry] = twoChanMicHiRes(param,fs...
 					- 360*floor(param(srcCnt).angle/360);
 		end
 		if(~any(param(srcCnt).angle==angleList))
-			error(sprintf('wrong angle (%d) in databaseParam(%d).angle',...
-					param(srcCnt).angle,srcCnt));
+			error(sprintf('wrong angle (%d) in databaseParam(%d).angle'...
+			                                     ,param(srcCnt).angle,srcCnt));
 		end
 
 		fileString = sprintf('%s/%s/%03d_%03d',param(srcCnt).room,irDir...
-												,param(srcCnt).angle,distance);
+		                                      ,param(srcCnt).angle,distance);
 		fileString = fullfile(databaseDir,fileString);
 		fileString1 = [fileString '_1' '.wav'];
 		fileString2 = [fileString '_2' '.wav'];
@@ -423,8 +421,8 @@ function [impulseResponses Fs micNum geometry] = fourMic(param)
 		error('required field "distance" missing');
 	end
 	if(isfield(param,'angle'))
-		warning([['angle is ignored because database "fourMic" has no data']...
-				['for different angles']]);
+		warning(['angle is ignored because database "fourMic" has no data'...
+		         'for different angles']);
 	end
 	if(~isfield(param,'room'))
 		error('required field "room" missing');
@@ -441,16 +439,16 @@ function [impulseResponses Fs micNum geometry] = fourMic(param)
 
 	for srcCnt=1:srcNum
 		if(~any(strcmp(param(srcCnt).room,roomlist)))
-			error(sprintf('wrong room name (%s) in databaseParam(%d).room',...
-					param(srcCnt).room,srcCnt));
+			error(sprintf('wrong room name (%s) in databaseParam(%d).room'...
+			                                      ,param(srcCnt).room,srcCnt));
 		end
 		if(~any(param(srcCnt).distance==distanceList))
-			error(sprintf('wrong distance (%f) in databaseParam(%d).distance',...
-					param(srcCnt).distance,srcCnt));
+			error(sprintf('wrong distance (%f) in databaseParam(%d).distance'...
+			                                  ,param(srcCnt).distance,srcCnt));
 		end
 
-		[impulseResponse Fs]=wavread(sprintf('%simpulsantwort_%s_%01.1fm.wav',...
-				databaseDir,param(srcCnt).room,param(srcCnt).distance));
+		[impulseResponse Fs]=wavread(sprintf('%simpulsantwort_%s_%01.1fm.wav'...
+		              ,databaseDir,param(srcCnt).room,param(srcCnt).distance));
 		if(size(impulseResponse,1)>maxSize)
 			maxSize = size(impulseResponse,1);
 		end
@@ -488,56 +486,53 @@ function [impulseResponses Fs micNum geometry] = ThreeChanDMA(param,fs)
 	end
 
 	micNum = 3;
- 
+
   %%FALSCH
 	geometry = [0 0 0; 0 0 0; 0 0 0];
-	
-  roomlist = {'studio'};
-	
-  distanceList = {[0.05 0.1 0.15 0.2 0.3 0.4 0.5 0.75 1]...
-			[005 010 015 020 030 040 050 075 100]};
+
+	roomlist = {'studio'};
+
+	distanceList = {[0.05 0.1 0.15 0.2 0.3 0.4 0.5 0.75 1]...
+	                [005 010 015 020 030 040 050 075 100]};
 	angleList = [15:15:360];
 	srcNum = numel(param);
 	maxSize = 0;
   
 	if (fs == 48000)
-    irDir = 'IR';
-  elseif (fs == 16000)
-    irDir = 'IR/16kHz';
-  else
-    error(sprintf([['Database \"3ChanDMA\" does not support %d']...
-				['Hz sample rate']],fs));
-  end
+		irDir = 'IR';
+	elseif (fs == 16000)
+		irDir = 'IR/16kHz';
+	else
+		error(sprintf(['Database \"3ChanDMA\" does not support %d'...
+		               'Hz sample rate'],fs));
+	end
 
 	for srcCnt=1:srcNum
-    databaseDir = param.fileLocation;
-    
-    
-    if(param(srcCnt).angle == 0)
-      param(srcCnt).angle = 360;      %fix for file naming
-    end
-    
+		databaseDir = param.fileLocation;
+		if(param(srcCnt).angle == 0)
+			param(srcCnt).angle = 360;      %fix for file naming
+		end
 		if(~any(strcmp(param(srcCnt).room,roomlist)))
-			error(sprintf('wrong room name (%s) in databaseParam(%d).room',...
-					param(srcCnt).room,srcCnt));
+			error(sprintf('wrong room name (%s) in databaseParam(%d).room'...
+			                                      ,param(srcCnt).room,srcCnt));
 		end
 		if(~any(param(srcCnt).distance==distanceList{1}))
-			error(sprintf('wrong distance (%f) in databaseParam(%d).distance',...
-					param(srcCnt).distance,srcCnt));
+			error(sprintf('wrong distance (%f) in databaseParam(%d).distance'...
+			                                  ,param(srcCnt).distance,srcCnt));
 		end
-		distance = distanceList{2}(find(param(srcCnt).distance==...
-				distanceList{1}));
+		distance = distanceList{2}(find(param(srcCnt).distance ...
+		                                                  == distanceList{1}));
 		if(~any(param(srcCnt).angle==angleList))
-			error(sprintf('wrong angle (%d) in databaseParam(%d).angle',...
-					param(srcCnt).angle,srcCnt));
+			error(sprintf('wrong angle (%d) in databaseParam(%d).angle'...
+			                                     ,param(srcCnt).angle,srcCnt));
 		end
 
-		fileString = sprintf( '%s%s/%s/%d_%03d', ...
-                          databaseDir, ...
-                          param(srcCnt).room, ...
-                          irDir, ...
-                          param(srcCnt).angle, ...
-                          distance );
+		fileString = sprintf( '%s%s/%s/%d_%03d' ...
+		                                       ,databaseDir ...
+		                                       ,param(srcCnt).room ...
+		                                       ,irDir ...
+		                                       ,param(srcCnt).angle ...
+		                                       ,distance );
 
 		[impulseResponse1 Fs] = wavread([fileString '_01M' '.wav']);
 		[impulseResponse2 Fs] = wavread([fileString '_02M' '.wav']);
