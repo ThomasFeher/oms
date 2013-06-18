@@ -5,7 +5,7 @@ geometry = options.geometry;
 frequency = options.frequency;
 W = options.beamforming.weights;
 phi = options.beamforming.beampattern.phi;
-teta = options.beamforming.beampattern.teta;
+theta = options.beamforming.beampattern.teta;
 micNum = numel(geometry(1,:));
 
 if(~isnumeric(phi))
@@ -16,12 +16,12 @@ if(~isvector(phi))
 		error('phi must be a vector or a scalar');
 	end
 end
-if(~isnumeric(teta))
-	error('teta must be numeric');
+if(~isnumeric(theta))
+	error('theta must be numeric');
 end
-if(~isvector(teta))
-	if(~isscalar(teta))
-		error('teta must be a vector or a scalar');
+if(~isvector(theta))
+	if(~isscalar(theta))
+		error('theta must be a vector or a scalar');
 	end
 end
 if(isfield(options.beamforming,'beampatternResolution'))
@@ -29,43 +29,64 @@ if(isfield(options.beamforming,'beampatternResolution'))
 			'options.beamforming.beampatternResolution will be ignored']);
 end
 
-%phi = [-90:beampatternResolution:90]/180*pi;
 phi = phi/180*pi;
 result.phi = phi/pi*180;
-%teta = [-90:beampatternResolution:90]/180*pi;
-teta = teta/180*pi;
-result.teta = teta/pi*180;
-phiLength = numel(phi);
-tetaLength = numel(teta);
-pattern = zeros(frequNum,phiLength,tetaLength);
-%d = ones(numel(geometry(1,:)),1);
+theta = theta/180*pi;
+result.teta = theta/pi*180;
+phiNum = numel(phi);
+thetaNum = numel(theta);
+pattern = zeros(micNum,frequNum,phiNum,thetaNum);
 c = options.c;
-%rMax = sqrt(max(abs(geometry(1,:))).^2 ...
-	%+max(abs(geometry(2,:))).^2 ...
-	%+max(abs(geometry(3,:))).^2);
-xMin = min(geometry(1,:));
-yMin = min(geometry(2,:));
-zMin = min(geometry(3,:));
-%if xMin<0
-	%geometry(1,:) = geometry(1,:) - xMin;
-%end
-%if yMin<0
-	%geometry(2,:) = geometry(2,:) - yMin;
-%end
-%if zMin<0
-	%geometry(3,:) = geometry(3,:) - zMin;
-%end
 
-for tetaCnt=0:tetaLength-1
-	for phiCnt=0:phiLength-1
-		x = geometry(1,:)*sin(teta(tetaCnt+1))*cos(phi(phiCnt+1));
-		xMod = x - min(x);
-		y = geometry(2,:)*sin(phi(phiCnt+1))*sin(teta(tetaCnt+1));
-		yMod = y - min(y);
-		z = geometry(3,:)*cos(teta(tetaCnt+1));
-		zMod = z - min(z);
-		r = exp(i*2*pi*frequency'*(x+y+z)/c);
-		pattern(:,phiCnt+1,tetaCnt+1) = abs(diag(W(:,:).'*r.')).^2;
+for thetaCnt=1:thetaNum
+	x = (geometry(1,:).'*sin(theta(thetaCnt))*cos(phi)).';
+	y = (geometry(2,:).'*sin(phi)*sin(theta(thetaCnt))).';
+	z = geometry(3,:)*cos(theta(thetaCnt));
+	for phiCnt=1:phiNum
+		r = exp(i*2*pi*frequency'*(x(phiCnt,:)+y(phiCnt,:)+z)/c);
+		pattern(:,:,phiCnt,thetaCnt) = W(:,:).*r.';
 	end
 end
-result.pattern = pattern;
+patternSquare = shiftdim(abs(sum(pattern)).^2);
+result.pattern = patternSquare;
+result.patternOrig = shiftdim(sum(pattern));
+result.patternSingle = pattern;
+
+%test 2 mics 0.1715m distance -> 0.5ms delay (17e-2/340) -> makes phase shift
+%of pi/10 (test here: http://www.sengpielaudio.com/Rechner-LaufzeitPhase.htm)
+%-> both signals added gives half phase shift -> pi/10/2
+%!test
+%! options.frequNum = 1;
+%! options.geometry = [0 1715e-4;0 0;0 0];
+%! options.frequency = 100;
+%! options.beamforming.weights = [1;1];
+%! options.beamforming.beampattern.phi = 0;
+%! options.beamforming.beampattern.teta = 90;
+%! options.c = 343;
+%! result = beampattern(options);
+%! assert(angle(result.patternOrig),pi/10/2,eps);
+
+%test with more frequencies
+%!test
+%! options.frequNum = 3;
+%! options.geometry = [0 1715e-4;0 0;0 0];
+%! options.frequency = [100 200 500];
+%! options.beamforming.weights = ones(2,3);
+%! options.beamforming.beampattern.phi = 0;
+%! options.beamforming.beampattern.teta = 90;
+%! options.c = 343;
+%! result = beampattern(options);
+%! assert(angle(result.patternOrig),[pi/10/2;pi/10;pi/2/2],eps);
+
+%test with more phi angles
+%!test
+%! options.frequNum = 3;
+%! options.geometry = [0 1715e-4;0 0;0 0];
+%! options.frequency = [100 200 500];
+%! options.beamforming.weights = ones(2,3);
+%! options.beamforming.beampattern.phi = [0 90];
+%! options.beamforming.beampattern.teta = 90;
+%! options.c = 343;
+%! result = beampattern(options);
+%! assert(angle(result.patternOrig),[pi/10/2 0;pi/10 0;pi/2/2 0],eps);
+
