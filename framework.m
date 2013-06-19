@@ -186,7 +186,7 @@ if(options.doBeamforming)
 	end
 	if(options.beamforming.doBeampattern)
 		beampatternResults = beampattern(options);
-		results.beamforming.beampattern.pattern = beampatternResults.pattern;
+		results.beamforming.beampattern = beampatternResults;
 		results.beamforming.beampattern.teta =...
 	   			options.beamforming.beampattern.teta;
 		results.beamforming.beampattern.phi =...
