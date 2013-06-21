@@ -125,14 +125,28 @@ frequency = options.frequency;
 %%%%%beamforming - weighting matrix synthesis%%%%%
 if(options.doBeamforming)
 	if(options.beamforming.doNoProcess)
-		%TODO accept vector with frequencies in options.beamforming.noProcess.frequNum
-		options.frequNum = options.beamforming.noProcess.frequNum;
-		frequNum = options.frequNum;
-		options.frequency =...
-			logspace(log10(options.beamforming.noProcess.frequMin)...
-			,log10(options.beamforming.noProcess.frequMax)...
-			,options.frequNum);
-		results.frequency = options.frequency;
+		if(isscalar(options.beamforming.noProcess.frequNum))
+			options.frequNum = options.beamforming.noProcess.frequNum;
+			frequNum = options.frequNum;
+			options.frequency =...
+				logspace(log10(options.beamforming.noProcess.frequMin)...
+				,log10(options.beamforming.noProcess.frequMax)...
+				,options.frequNum);
+			results.frequency = options.frequency;
+		elseif(isvector(options.beamforming.noProcess.frequNum))
+			if(iscolumn(options.beamforming.noProcess.frequNum))
+				options.frequency = options.beamforming.noProcess.frequNum.';
+			else
+				options.frequency = options.beamforming.noProcess.frequNum;
+			end
+			frequNum = numel(options.frequency);
+			options.frequNum = frequNum;
+		else
+			disp('size(options.beamforming.noProcess.frequNum):');
+			disp(size(options.beamforming.noProcess.frequNum));
+			error(['options.beamforming.noProcess.frequNum must be a scalar'...
+				   'or a vector']);
+		end
 	end
 	if(options.beamforming.doWeightMatSynthesis)
 		disp('synthesizing weight matrix...')
