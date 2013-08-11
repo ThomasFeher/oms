@@ -1,7 +1,7 @@
 function [W,WICA,z,p,Wdiff] = FastICA (x,maxIteration,Wold)
 
 	%center and whiten
-	[z,V]=whitening(x);
+	[z,V] = whitening(x);
 
 	%FastICA
 
