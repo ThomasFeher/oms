@@ -25,6 +25,7 @@ if(patternDims==2)
 	di = pattern(frontIdx,:)./mean(pattern,1);
 elseif(patternDims==3)
 	di = pattern(frontIdx(1),frontIdx(2),:) ./ mean(mean(pattern,1),2);
+	%di = squeeze(pattern(frontIdx(1),frontIdx(2),:)) ./ mean(reshape(pattern,[],size(pattern,3)),1).';
 end
 %make output a column vector
 di = squeeze(di);
