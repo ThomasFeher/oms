@@ -1,37 +1,35 @@
 clear all;
 close all;
 
-%% Add related folders
-addpath(fileparts(fileparts(mfilename('fullpath'))));
-
-resultDir = '/erk/tmp/feher/threeMicSpeechRecog/';
-%resultDir = '/erk/tmp/feher/speechRecogAdapt2/';
+resultDir = '/erk/tmp/feher/twinAngle/';
+tmpDir = resultDir;
 noiseFile = '/erk/daten1/uasr-data-feher/audio/nachrichten_female.wav';
+noiseFile2 = '/erk/daten1/uasr-data-feher/audio/nachrichten_10s.wav';
+irDatabaseDir = '/erk/daten1/uasr-data-feher/audio/Impulsantworten/'
 
 %%%%%parameters%%%%%
-distances = [0.5];
-%levels = [5,0,-5,-10,-15,-20,-25,-30];
+distances = [0.4];
 level = -10;
 speaker_angle = 0;
-%speaker_angle = 90;
-%angles = [0:15:180]+speaker_angle;
-angles = [0:30:180]+speaker_angle;
-shortSet = true;%process only first <shortSetNum> files
-shortSetNum = 0;
+angles = [0:15:180]+speaker_angle;
+doSecondNoiseSource = true;
+shortSet = false;%process only first <shortSetNum> files
+shortSetNum = 0;%set to 0 and shortSet to true in order to use already
+                %processed data
 doSpeechRecog = true;
 doRemote = true;
-doGetRemoteResults = true;%if true, only results of previous run are gathered
+doGetRemoteResults = false;%if true, only results of previous run are gathered
+admaAlgo = 'wiener1';%'binMask','wiener1','wiener2','dist','nsIca','nsNlms'...
+                   %,'nsFix','eight'
 corpus = 'apollo';%'samurai','apollo';
 mic = 'twin';%'twin', 'three'
-model = 'adaptNoise';%model to use for speech recognition: 'adapt', 'adaptNoise'
-					%any other strings or missing variable model will result in
-					%usage of the standart model '3_15'
-					%'adapt' uses the corresponding adapted model for each
-					%algorithm (sphere,adma,binMask)
-					%'adaptNoise' uses the corresponding 10dB SNR noise models
-irDatabaseName = 'twoChanMic';% 'twoChanMicHiRes', 'twoChanMic'
-								%only used if mic = 'twin'
-room = 'praktikum';%'studio' 'praktikum'
+model = 'adapt';%model to use for speech recognition: 'adapt', 'adaptNoise'
+                     %any other strings or missing variable model will result in
+                     %usage of the standart model '3_15'
+                     %'adapt' uses the corresponding adapted model for each
+                     %algorithm (sphere,adma,binMask)
+                     %'adaptNoise' uses the corresponding 10dB SNR noise models
+room = 'studio';%'studio' 'praktikum'
 %%%%%parameters%%%%%
 
 %models:
@@ -54,8 +52,44 @@ room = 'praktikum';%'studio' 'praktikum'
 %3_15_A_twin_000_binMask_noise_label.hmm
 %3_15_A_twin_000_sphere_label.hmm
 %3_15_A_twin_000_sphere_noise_label.hmm
+%3_15_A_twin_000_wiener_label.hmm
+%3_15_A_twin_000_wiener_noise_label.hmm
 %3_15.hmm
 
+%create result dir
+if(~exist(tmpDir,'dir'))
+	mkdir(tmpDir);
+end
+if(~exist(resultDir,'dir'))
+	mkdir(resultDir);
+end
+
+%create the algorithm name with first letter upper case
+admaAlgoUpCase = regexprep(admaAlgo,'(^.?)','${upper($1)}');
+
+%start logging
+diary(fullfile(resultDir,['log' admaAlgoUpCase '.txt']));%switch logging on
+
+%display file name
+disp(['script: ' mfilename]);
+
+%display all variables
+disp('settings:');
+variables = who;%store variable names in cell array
+for varCnt=1:numel(variables)
+	disp([repmat([char(variables(varCnt)) ' = ']...
+			,size(eval(char(variables(varCnt))),1),1)...
+			num2str(eval(char(variables(varCnt))))]);
+end
+%print time stamp to log file
+currentTime = clock();
+disp(sprintf('%d-%d-%d_%d:%d:%d',currentTime(1),currentTime(2)...
+					,currentTime(3),currentTime(4),currentTime(5)...
+					,fix(currentTime(6))));
+%add oms folders
+addpath('~/oms/');
+addpath('~/oms/scripts/');
+%configure paths for speech corpora
 if(strcmpi(corpus,'samurai'))
 	dbDir='/erk/daten2/uasr-data-common/ssmg/common/';
 	filelistPath = [dbDir 'flists/SAMURAI_0.flst'];
@@ -68,105 +102,206 @@ else
 	error(['unknown corpus: ' corpus]);
 end
 
+%set correct database
+anglesPraktikum = [0:30:180];%all available angles for praktikum database
+distancesPraktikum = [0.5 1.5];%all available distances for praktikum database
 if(strcmpi(mic,'twin'))
-	levelNorm = -1;%level for noise signal to get SNR of 0dB
+	if(strcmpi(room,'studio'))
+		levelNorm = -1;%level for noise signal to get SNR of 0dB
+		irDatabaseName = 'twoChanMicHiRes';
+	elseif(strcmpi(room,'praktikum'))
+		warning('calculate normalization level to get correct SNR values');
+		levelNorm = 0;
+		irDatabaseName = 'twoChanMic';
+		angles = intersect(angles,anglesPraktikum);
+		%get closest distance
+		distDiff = distancesPraktikum - distances;
+		[noi distIdx] = min(distDiff);
+		distances = distancesPraktikum(distIdx);
+	else
+		error(['unknown room name: ' room ' for microphon: ' mic]);
+	end
 elseif(strcmpi(mic,'three'))
-	levelNorm = 2;%level for noise signal to get SNR of 0dB
+	if(strcmpi(room,'studio'))
+		levelNorm = 2;%level for noise signal to get SNR of 0dB
+		irDatabaseName = 'threeChanDMA';
+	else
+		error(['unknown room name: ' room ' for microphon: ' mic]);
+	end
 else
 	error(['unknown microphone: ' mic]);
 end
 
+%set correct speech recognition model
 binMaskModel = '3_15';
 admaModel = '3_15';
 sphereModel = '3_15';
 if(exist('model','var') & strcmpi(model,'adapt'))
-	binMaskModel = ['3_15_A_' mic '_000_binMask_label'];
+	if(strcmpi(admaAlgo,'binMask'))
+		binMaskModel = ['3_15_A_' mic '_000_binMask_label'];
+	elseif(regexpi(admaAlgo,'wiener'))
+		binMaskModel = ['3_15_A_' mic '_000_wiener_label'];
+	elseif(strcmpi(admaAlgo,'nsIca'))
+		binMaskModel = ['3_15_A_' mic '_000_adma_label'];
+	elseif(strcmpi(admaAlgo,'nsNlms'))
+		binMaskModel = ['3_15_A_' mic '_000_adma_label'];
+	elseif(strcmpi(admaAlgo,'nsFix'))
+		binMaskModel = ['3_15_A_' mic '_000_adma_label'];
+	elseif(strcmpi(admaAlgo,'eight'))
+		binMaskModel = ['3_15_A_' mic '_000_adma_label'];
+	else
+		error(['unknown algorithm: ' admaAlgo]);
+	end
 	admaModel = ['3_15_A_' mic '_000_adma_label'];
 	sphereModel = ['3_15_A_' mic '_000_sphere_label'];
 elseif(exist('model','var') & strcmpi(model,'adaptNoise'))
-	binMaskModel = ['3_15_A_' mic '_000_binMask_noise_label'];
+	if(strcmpi(admaAlgo,'binMask'))
+		binMaskModel = ['3_15_A_' mic '_000_binMask_noise_label'];
+	elseif(regexpi(admaAlgo,'wiener'))
+		binMaskModel = ['3_15_A_' mic '_000_wiener_noise_label'];
+	elseif(strcmpi(admaAlgo,'nsIca'))
+		binMaskModel = ['3_15_A_' mic '_000_adma_noise_label'];
+	elseif(strcmpi(admaAlgo,'nsNlms'))
+		binMaskModel = ['3_15_A_' mic '_000_adma_noise_label'];
+	elseif(strcmpi(admaAlgo,'nsFix'))
+		binMaskModel = ['3_15_A_' mic '_000_adma_noise_label'];
+	elseif(strcmpi(admaAlgo,'eight'))
+		binMaskModel = ['3_15_A_' mic '_000_adma_noise_label'];
+	else
+		error(['unknown algorithm: ' admaAlgo]);
+	end
 	admaModel = ['3_15_A_' mic '_000_adma_noise_label'];
 	sphereModel = ['3_15_A_' mic '_000_sphere_noise_label'];
+end
+
+%set correct settings for adma algorithm
+optionString = '';
+if(strcmpi(admaAlgo,'binMask')&strcmpi(mic,'twin'))
+	admaSwitch = 'doTwinMicBeamforming';
+elseif(strcmpi(admaAlgo,'wiener1')&strcmpi(mic,'twin'))
+	admaSwitch = 'doTwinMicWienerFiltering';
+	optionString = ['options.twinMic.wienerFilter.signalPlusNoiseEstimate '...
+					   '= ''cardioid'';'...
+					'options.twinMic.wienerFilter.signalToFilter '...
+						'= ''cardioid'';'];
+elseif(strcmpi(admaAlgo,'wiener2')&strcmpi(mic,'twin'))
+	admaSwitch = 'doTwinMicWienerFiltering';
+	optionString = ['options.twinMic.wienerFilter.signalPlusNoiseEstimate '...
+					   '= ''sphere'';'...
+					'options.twinMic.wienerFilter.signalToFilter '...
+						'= ''sphere'';'];
+elseif(strcmpi(admaAlgo,'nsIca')&strcmpi(mic,'twin'))
+	admaSwitch = 'doTwinMicNullSteering';
+	optionString = ['options.twinMic.nullSteering.algorithm = ''ICA'';'...
+					'options.twinMic.nullSteering.update = 0.1;'...
+		            'options.twinMic.nullSteering.angle = angles(angleCnt);'...
+					'options.twinMic.nullSteering.iterations = 1;'];
+elseif(strcmpi(admaAlgo,'nsFix')&strcmpi(mic,'twin'))
+	admaSwitch = 'doTwinMicNullSteering';
+	optionString = ['options.twinMic.nullSteering.algorithm = ''fix'';'...
+		            'options.twinMic.nullSteering.angle = angles(angleCnt);'];
+elseif(strcmpi(admaAlgo,'nsNlms')&strcmpi(mic,'twin'))
+	admaSwitch = 'doTwinMicNullSteering';
+	optionString = ['options.twinMic.nullSteering.algorithm = ''NLMS'';'...
+					'options.twinMic.nullSteering.mu = 0.01;'...
+		            'options.twinMic.nullSteering.angle = angles(angleCnt);'...
+					'options.twinMic.nullSteering.alpha = 0;'];
+elseif(strcmpi(admaAlgo,'eight')&strcmpi(mic,'twin'))
+	admaSwitch = 'doTwinMicNullSteering';
+	optionString = ['options.twinMic.nullSteering.algorithm = ''fix'';'...
+		            'options.twinMic.nullSteering.angle = 90;'];
+elseif(strcmpi(admaAlgo,'binMask')&strcmpi(mic,'three'))
+	admaSwitch = 'doADMA';
+elseif(regexpi(admaAlgo,'wiener')&strcmpi(mic,'three'))
+	error('not yet implemented');
+else
+	error(['unknown algorithm ' admaAlgo ' for microphone ' mic]);
 end
 
 fId = fopen(filelistPath);
 fileList = textscan(fId,'%s %s');
 fclose(fId);
 fileNum = numel(fileList{1});
-if(shortSet&&shortSetNum<fileNum) fileNum=shortSetNum;end
+if(shortSet&&shortSetNum<fileNum)
+	fileNum=shortSetNum;
+end
 if(~exist(resultDir,'dir')) mkdir(resultDir); end
+	mkdir(resultDir);
+end
 %delete([resultDir '/*.csv']);%delete previous results
 system(['rename .csv .csv.old ' resultDir '*.csv']);%rename previous results
 %if(~exist([resultDir 'cardioid'],'dir')) mkdir([resultDir 'cardioid']); end
 %if(~exist([resultDir 'binMask'],'dir')) mkdir([resultDir 'binMask']); end
 %if(~exist([resultDir 'sphere'],'dir')) mkdir([resultDir 'sphere']); end
-if(~doGetRemoteResults) diary([resultDir 'log.txt']); end
 
-%distCnt = 1;
 for angleCnt = 1:numel(angles)
 	%reset mean snr
-	snrImpAllCard=zeros(numel(angles),numel(distances));
-	snrSphereAll=zeros(numel(angles),numel(distances));
-	snrAllCard=zeros(numel(angles),numel(distances));
-	snrImpAllBm=zeros(numel(angles),numel(distances));
-	%snrBeforeAllBm=zeros(numel(angles),numel(distances));
-	snrAllBm=zeros(numel(angles),numel(distances));
-	for distCnt = 1:numel(distances)
-		dirString = num2str(angleCnt);
+	snrImpAllCard=zeros(numel(angles),1);
+	snrSphereAll=zeros(numel(angles),1);
+	snrAllCard=zeros(numel(angles),1);
+	snrImpAllBm=zeros(numel(angles),1);
+	%snrBeforeAllBm=zeros(numel(angles),1);
+	snrAllBm=zeros(numel(angles),1);
+		disp(sprintf('current angle: %d',angles(angleCnt)));
+		dirString = num2str(angleCnt);%current angle count as directory name
 		%create subdirs of each noise level
-		if(~exist([resultDir 'cardioid' dirString],'dir'))
-			mkdir([resultDir 'cardioid' dirString]);
+		cardioidDir = [fullfile(resultDir,'cardioid') dirString];
+		cardioidResultDir = [cardioidDir 'Result'];
+		if(~exist(cardioidDir,'dir'))
+			mkdir(cardioidDir);
 		end
-		if(~exist([resultDir 'binMask' dirString],'dir'))
-			mkdir([resultDir 'binMask' dirString]);
+		admaDir = [fullfile(resultDir,admaAlgo) dirString];
+		admaResultDir = [admaDir 'Result'];
+		if(~exist(admaDir,'dir'))
+			mkdir(admaDir);
 		end
-		if(~exist([resultDir 'sphere' dirString],'dir'))
-			mkdir([resultDir 'sphere' dirString]);
+		sphereDir = [fullfile(resultDir,'sphere') dirString];
+		sphereResultDir = [sphereDir 'Result'];
+		if(~exist(sphereDir,'dir'))
+			mkdir(sphereDir);
 		end
 
 	if(~doGetRemoteResults)
 	for fileCnt=1:fileNum
 		file = fileList{1}{fileCnt};%get file from list
 		fileAbs = fullfile(signalPath,file);%concatenate file and path
+		options.(admaSwitch) = true;%set appropriate algo to true
+		eval(optionString);%set appropriate options
 		options.resultDir = resultDir;
-		options.tmpDir = resultDir;
+		options.tmpDir = tmpDir;
 		options.doTdRestore = true;
 		options.doConvolution = true;
 		options.inputSignals = {fileAbs,noiseFile};
 		options.irDatabaseSampleRate = 16000;
+		options.irDatabase.dir = irDatabaseDir;
 		options.blockSize = 1024;
 		options.timeShift = 512;
-		if(strcmpi(mic,'twin'))
-			options.irDatabaseName = irDatabaseName;
-			options.doTwinMicBeamforming = true;
-			options.twinMic.beamformer.update = 0.2;
-			options.twinMic.beamformer.angle = 60;
-		elseif(strcmpi(mic,'three'))
-			options.irDatabaseName = 'threeChanDMA';
-			options.doADMA = true;
-			options.adma.findMax = false;
-			options.adma.findMin = false;
-			options.adma.pattern = 'cardioid';
-			options.adma.Mask = true;
-			options.adma.speaker_range = speaker_angle+[-45 45];
-			%options.adma.freqBand = [50 6000];
-			options.adma.theta1 = speaker_angle;
-			options.adma.theta2 = angles(angleCnt);
-			options.adma.mask_update =0.2;
-			options.adma.mask_angle = 0.9;
-		end
-		%sourceDist = 1;
-		%calculate amplification of second signal due to increased distance
-		%levelDist = 20*log10(distances(distCnt)/sourceDist);
+		options.irDatabaseName = irDatabaseName;
+		options.twinMic.beamformer.update = 0.2;
+		options.twinMic.beamformer.angle = 60;
+		options.twinMic.wienerFilter.update = 1;
+		options.twinMic.nullSteering.angle = angles(angleCnt);
+		options.adma.pattern = 'cardioid';
+		options.adma.Mask = true;
+		options.adma.theta1 = speaker_angle;
+		%options.adma.theta2 = angles(angleCnt);
+		options.adma.mask_update = 0.2;
+		options.adma.mask_angle = 0.9;
 		options.impulseResponses = struct(...
 			'angle',{speaker_angle angles(angleCnt)}...
-			...%,'distance',{sourceDist distances(distCnt)}...
-			,'distance',{distances(distCnt) distances(distCnt)}...
+			,'distance',{distances distances}...
 			,'room',room...
 			,'level',{0 levelNorm+level}...
 			,'fileLocation'...
 			,'/erk/daten1/uasr-data-feher/audio/Impulsantworten/3ChanDMA/'...
 			,'length',-1);
+		if(doSecondNoiseSource)
+			options.inputSignals{3} = noiseFile2;
+			ir3 = options.impulseResponses(2);%copy properties of 1st noise sig
+			ir3.angle = 90;%change angle to 90 degree fixed
+			%append modified parameters for second noise signal
+			options.impulseResponses = [options.impulseResponses,ir3];
+		end
 		%beamforming
 		[result opt] = start(options);
 
@@ -178,24 +313,24 @@ for angleCnt = 1:numel(angles)
 			[snrCardImp, snrSphere, snrCardioid] = evalADMA(opt,result,2);
 			[snrBinImp, snrSphere, snrBinMask] = evalADMA(opt,result,1);
 		end
-		snrImpAllCard(angleCnt,distCnt) =...
-			snrImpAllCard(angleCnt,distCnt) + snrCardImp;
-		snrSphereAll(angleCnt,distCnt) =...
-			snrSphereAll(angleCnt,distCnt) + snrSphere;
-		snrAllCard(angleCnt,distCnt) =...
-			snrAllCard(angleCnt,distCnt) + snrCardioid;
+		snrImpAllCard(angleCnt,1) =...
+			snrImpAllCard(angleCnt,1) + snrCardImp;
+		snrSphereAll(angleCnt,1) =...
+			snrSphereAll(angleCnt,1) + snrSphere;
+		snrAllCard(angleCnt,1) =...
+			snrAllCard(angleCnt,1) + snrCardioid;
 
-		snrImpAllBm(angleCnt,distCnt) =...
-			snrImpAllBm(angleCnt,distCnt) + snrBinImp;
-		snrAllBm(angleCnt,distCnt) =...
-			snrAllBm(angleCnt,distCnt) + snrBinMask;
+		snrImpAllBm(angleCnt,1) =...
+			snrImpAllBm(angleCnt,1) + snrBinImp;
+		snrAllBm(angleCnt,1) =...
+			snrAllBm(angleCnt,1) + snrBinMask;
 
 		%%%%%output signal%%%%%
 		%store signals (sphere, cardioid and binMask)
 		%binMask
 		signal = result.signal(1,:).';
 		signal = signal/max(abs(signal))*0.95;
-		wavName = fullfile([resultDir 'binMask' dirString],file);
+		wavName = fullfile(admaDir,file);
 		wavwrite(signal,opt.fs,wavName);
 		%cardioid
 		if(strcmpi(mic,'twin'))
@@ -204,7 +339,7 @@ for angleCnt = 1:numel(angles)
 			signal = result.signal(2,:).';
 		end
 		signal = signal/max(abs(signal))*0.95;
-		wavName = fullfile([resultDir 'cardioid' dirString],file);
+		wavName = fullfile(cardioidDir,file);
 		wavwrite(signal,opt.fs,wavName);
 		%sphere
 		if(strcmpi(mic,'twin'))
@@ -213,7 +348,7 @@ for angleCnt = 1:numel(angles)
 			signal = result.signal(3,:).';
 		end
 		signal = signal/max(abs(signal))*0.95;
-		wavName = fullfile([resultDir 'sphere' dirString],file);
+		wavName = fullfile(sphereDir,file);
 		wavwrite(signal,opt.fs,wavName);
 	end%filCnt
 	end%if(~doGetRemoteResults)
@@ -221,43 +356,41 @@ for angleCnt = 1:numel(angles)
 	%speech recognition for all three signals
 	if(doSpeechRecog)
 		clear options;
-		%if(exist('model','var')) options.speechRecognition.model = model; end
 		%binary masking
 		options.doSpeechRecognition = true;
 		options.speechRecognition.doRemote = doRemote;
 		options.speechRecognition.doGetRemoteResults = doGetRemoteResults;
 		options.speechRecognition.db = corpus;
 		options.speechRecognition.model = binMaskModel;
-		options.resultDir = [resultDir 'binMaskResult' dirString];
-		options.speechRecognition.sigDir = ...
-				[resultDir 'binMask' dirString];
+		options.resultDir = admaResultDir;
+		options.speechRecognition.sigDir = admaDir;
 		options.tmpDir = options.speechRecognition.sigDir;
 		results = start(options);
-		wrrBinMask(angleCnt,distCnt) = results.speechRecognition.wrr;
-		wrrConfBinMask(angleCnt,distCnt) = results.speechRecognition.wrrConf;
-		acrBinMask(angleCnt,distCnt) = results.speechRecognition.acr;
-		acrConfBinMask(angleCnt,distCnt) = results.speechRecognition.acrConf;
-		corBinMask(angleCnt,distCnt) = results.speechRecognition.cor;
-		corConfBinMask(angleCnt,distCnt) = results.speechRecognition.corConf;
-		latBinMask(angleCnt,distCnt) = results.speechRecognition.lat;
-		latConfBinMask(angleCnt,distCnt) = results.speechRecognition.latConf;
+		wrrBinMask(angleCnt,1) = results.speechRecognition.wrr;
+		wrrConfBinMask(angleCnt,1) = results.speechRecognition.wrrConf;
+		acrBinMask(angleCnt,1) = results.speechRecognition.acr;
+		acrConfBinMask(angleCnt,1) = results.speechRecognition.acrConf;
+		corBinMask(angleCnt,1) = results.speechRecognition.cor;
+		corConfBinMask(angleCnt,1) = results.speechRecognition.corConf;
+		latBinMask(angleCnt,1) = results.speechRecognition.lat;
+		latConfBinMask(angleCnt,1) = results.speechRecognition.latConf;
+		nBinMask(angleCnt,1) = results.speechRecognition.n;
 		%adma
 		options.speechRecognition.model = admaModel;
-		nBinMask(angleCnt,distCnt) = results.speechRecognition.n;
 		options.resultDir = [resultDir 'cardioidResult' dirString];
 		options.speechRecognition.sigDir = ...
 				[resultDir 'cardioid' dirString];
 		options.tmpDir = options.speechRecognition.sigDir;
 		results = start(options);
-		wrrCardioid(angleCnt,distCnt) = results.speechRecognition.wrr;
-		wrrConfCardioid(angleCnt,distCnt) = results.speechRecognition.wrrConf;
-		acrCardioid(angleCnt,distCnt) = results.speechRecognition.acr;
-		acrConfCardioid(angleCnt,distCnt) = results.speechRecognition.acrConf;
-		corCardioid(angleCnt,distCnt) = results.speechRecognition.cor;
-		corConfCardioid(angleCnt,distCnt) = results.speechRecognition.corConf;
-		latCardioid(angleCnt,distCnt) = results.speechRecognition.lat;
-		latConfCardioid(angleCnt,distCnt) = results.speechRecognition.latConf;
-		nCardioid(angleCnt,distCnt) = results.speechRecognition.n;
+		wrrCardioid(angleCnt,1) = results.speechRecognition.wrr;
+		wrrConfCardioid(angleCnt,1) = results.speechRecognition.wrrConf;
+		acrCardioid(angleCnt,1) = results.speechRecognition.acr;
+		acrConfCardioid(angleCnt,1) = results.speechRecognition.acrConf;
+		corCardioid(angleCnt,1) = results.speechRecognition.cor;
+		corConfCardioid(angleCnt,1) = results.speechRecognition.corConf;
+		latCardioid(angleCnt,1) = results.speechRecognition.lat;
+		latConfCardioid(angleCnt,1) = results.speechRecognition.latConf;
+		nCardioid(angleCnt,1) = results.speechRecognition.n;
 		%sphere
 		options.speechRecognition.model = sphereModel;
 		options.resultDir = [resultDir 'sphereResult' dirString];
@@ -265,18 +398,17 @@ for angleCnt = 1:numel(angles)
 				[resultDir 'sphere' dirString];
 		options.tmpDir = options.speechRecognition.sigDir;
 		results = start(options);
-		wrrSphere(angleCnt,distCnt) = results.speechRecognition.wrr;
-		wrrConfSphere(angleCnt,distCnt) = results.speechRecognition.wrrConf;
-		acrSphere(angleCnt,distCnt) = results.speechRecognition.acr;
-		acrConfSphere(angleCnt,distCnt) = results.speechRecognition.acrConf;
-		corSphere(angleCnt,distCnt) = results.speechRecognition.cor;
-		corConfSphere(angleCnt,distCnt) = results.speechRecognition.corConf;
-		latSphere(angleCnt,distCnt) = results.speechRecognition.lat;
-		latConfSphere(angleCnt,distCnt) = results.speechRecognition.latConf;
-		nSphere(angleCnt,distCnt) = results.speechRecognition.n;
+		wrrSphere(angleCnt,1) = results.speechRecognition.wrr;
+		wrrConfSphere(angleCnt,1) = results.speechRecognition.wrrConf;
+		acrSphere(angleCnt,1) = results.speechRecognition.acr;
+		acrConfSphere(angleCnt,1) = results.speechRecognition.acrConf;
+		corSphere(angleCnt,1) = results.speechRecognition.cor;
+		corConfSphere(angleCnt,1) = results.speechRecognition.corConf;
+		latSphere(angleCnt,1) = results.speechRecognition.lat;
+		latConfSphere(angleCnt,1) = results.speechRecognition.latConf;
+		nSphere(angleCnt,1) = results.speechRecognition.n;
 		clear options;
 	end%if(doSpeechRecog)
-	end%distCnt
 
 	if(doSpeechRecog)
 		dlmwrite(fullfile(resultDir,'wrrSphere.csv')...
@@ -294,19 +426,19 @@ for angleCnt = 1:numel(angles)
 		dlmwrite(fullfile(resultDir,'nSphere.csv')...
 			,[angles(angleCnt) nSphere(angleCnt,:)],'-append');
 
-		dlmwrite(fullfile(resultDir,'wrrBinMask.csv')...
+		dlmwrite(fullfile(resultDir,['wrr' admaAlgoUpCase '.csv'])...
 			,[angles(angleCnt) wrrBinMask(angleCnt,:) ...
 			wrrConfBinMask(angleCnt,:)],'-append');
-		dlmwrite(fullfile(resultDir,'acrBinMask.csv')...
+		dlmwrite(fullfile(resultDir,['acr' admaAlgoUpCase '.csv'])...
 			,[angles(angleCnt) acrBinMask(angleCnt,:) ...
 			acrConfBinMask(angleCnt,:)],'-append');
-		dlmwrite(fullfile(resultDir,'corBinMask.csv')...
+		dlmwrite(fullfile(resultDir,['cor' admaAlgoUpCase '.csv'])...
 			,[angles(angleCnt) corBinMask(angleCnt,:) ...
 			corConfBinMask(angleCnt,:)],'-append');
-		dlmwrite(fullfile(resultDir,'latBinMask.csv')...
+		dlmwrite(fullfile(resultDir,['lat' admaAlgoUpCase '.csv'])...
 			,[angles(angleCnt) latBinMask(angleCnt,:) ...
 			latConfBinMask(angleCnt,:)],'-append');
-		dlmwrite(fullfile(resultDir,'nBinMask.csv')...
+		dlmwrite(fullfile(resultDir,['n' admaAlgoUpCase '.csv'])...
 			,[angles(angleCnt) nBinMask(angleCnt,:)],'-append');
 
 		dlmwrite(fullfile(resultDir,'wrrCardioid.csv')...
@@ -326,24 +458,26 @@ for angleCnt = 1:numel(angles)
 	end%if(doSpeechRecog)
 
 	if(~doGetRemoteResults)
-		dlmwrite(sprintf('%ssnrSphere.csv',resultDir)...
+		dlmwrite(fullfile(resultDir,'snrSphere.csv')...
 			,[angles(angleCnt) snrSphereAll(angleCnt,:)...
 			/fileNum],'-append');
-		dlmwrite(sprintf('%ssnrCard.csv',resultDir)...
+		dlmwrite(fullfile(resultDir,'snrCard.csv')...
 			,[angles(angleCnt) snrAllCard(angleCnt,:)...
 			/fileNum],'-append');
-		dlmwrite(sprintf('%ssnrCardImp.csv',resultDir)...
+		dlmwrite(fullfile(resultDir,'snrCardImp.csv')...
 			,[angles(angleCnt) snrImpAllCard(angleCnt,:)...
 			/fileNum],'-append');
-		%dlmwrite(sprintf('%ssnrBinBefore.csv',resultDir)...
-			%,[angles(angleCnt) snrBeforeAllBm(angleCnt,:)...
-			%/fileNum],'-append');
-		dlmwrite(sprintf('%ssnrBin.csv',resultDir)...
+		dlmwrite(fullfile(resultDir,['snr' admaAlgoUpCase '.csv'])...
 			,[angles(angleCnt) snrAllBm(angleCnt,:)...
 			/fileNum],'-append');
-		dlmwrite(sprintf('%ssnrBinImp.csv',resultDir)...
+		dlmwrite(fullfile(resultDir,['snr' admaAlgoUpCase 'Imp.csv'])...
 			,[angles(angleCnt) snrImpAllBm(angleCnt,:)...
 			/fileNum],'-append');
 	end
 end%angleCnt
-diary off;
+%print time stamp to log file
+currentTime = clock();
+disp(sprintf('%d-%d-%d_%d:%d:%d',currentTime(1),currentTime(2)...
+					,currentTime(3),currentTime(4),currentTime(5)...
+					,fix(currentTime(6))));
+diary off
