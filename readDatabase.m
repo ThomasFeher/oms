@@ -98,7 +98,7 @@ function [outData signalSingle inputSignals FsSig geometry] = readDatabase...
 			databaseParam = struct('distance', 4,'room','studio');
 		end
 		[impulseResponses FsIR micNum geometry] = ThreeChanDMA(databaseParam...
-		                                                      ,sampleRate);
+												  ,sampleRate,databasesDir);
 	otherwise
 		%try calling the database name as function
 		databaseHandle = str2func(['load' databaseName]);
@@ -471,7 +471,7 @@ end
 %% /** 
 %   * Load impulse responses for three channel differential microphone array  
 %   */
-function [impulseResponses Fs micNum geometry] = ThreeChanDMA(param,fs)
+function [impulseResponses Fs micNum geometry] = ThreeChanDMA(param,fs,baseDir)
 	if(nargin<2)
 		fs = 48000;
 	end
@@ -497,6 +497,8 @@ function [impulseResponses Fs micNum geometry] = ThreeChanDMA(param,fs)
 	angleList = [15:15:360];
 	srcNum = numel(param);
 	maxSize = 0;
+
+	databaseDir = fullfile(baseDir,'3ChanDMA/');
   
 	if (fs == 48000)
 		irDir = 'IR';
@@ -508,7 +510,6 @@ function [impulseResponses Fs micNum geometry] = ThreeChanDMA(param,fs)
 	end
 
 	for srcCnt=1:srcNum
-		databaseDir = param.fileLocation;
 		if(param(srcCnt).angle == 0)
 			param(srcCnt).angle = 360;      %fix for file naming
 		end
