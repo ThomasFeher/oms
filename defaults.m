@@ -151,7 +151,12 @@ defaultOptions.speechRecognition.doRemote = false;%start recognizer on eakss1 an
 defaultOptions.speechRecognition.doGetRemoteResults = false;%gather results of
 		%previous remote speech recognition experiment no speech recognition
 		%will be done if this key is set true
-defaultOptions.speechRecognition.sigDir = '';
+defaultOptions.speechRecognition.sigDir = '';%here are the signal files stored
+defaultOptions.speechRecognition.sigDirRemote = '';%here will the signal files
+                                            %be copied to on the remote machine
+defaultOptions.speechRecognition.resultDir = '';%here will the results be stored
+defaultOptions.speechRecognition.resultDirRemote = '';%here will the results
+                                               %on the remote machine be stored
 defaultOptions.speechRecognition.db = 'samurai';%'samurai', 'apollo'
 defaultOptions.speechRecognition.model = '3_15';
 %%%%%speech recognition%%%%%
