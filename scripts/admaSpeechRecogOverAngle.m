@@ -1,6 +1,7 @@
 clear all;
 close all;
 
+omsDir = '~/Daten/Tom/oms/';
 resultDir = '/erk/tmp/feher/twinAngle/';
 tmpDir = resultDir;
 noiseFile = '/erk/daten1/uasr-data-feher/audio/nachrichten_female.wav';
@@ -56,6 +57,17 @@ room = 'studio';%'studio' 'praktikum'
 %3_15_A_twin_000_wiener_noise_label.hmm
 %3_15.hmm
 
+%add oms folders
+addpath(omsDir);
+addpath([omsDir '/scripts/']);
+
+%expand directories if necessary
+if ~isMatlab()
+	tmpDir = tilde_expand(tmpDir);
+	resultDir = tilde_expand(resultDir);
+	irDatabaseDir = tilde_expand(irDatabaseDir);
+end
+
 %create result dir
 if(~exist(tmpDir,'dir'))
 	mkdir(tmpDir);
@@ -65,7 +77,8 @@ if(~exist(resultDir,'dir'))
 end
 
 %create the algorithm name with first letter upper case
-admaAlgoUpCase = regexprep(admaAlgo,'(^.?)','${upper($1)}');
+%admaAlgoUpCase = regexprep(admaAlgo,'(^.?)','${upper($1)}');
+admaAlgoUpCase = [upper(admaAlgo(1)) admaAlgo(2:end)];
 
 %start logging
 diary(fullfile(resultDir,['log' admaAlgoUpCase '.txt']));%switch logging on
@@ -81,14 +94,13 @@ for varCnt=1:numel(variables)
 			,size(eval(char(variables(varCnt))),1),1)...
 			num2str(eval(char(variables(varCnt))))]);
 end
+
 %print time stamp to log file
 currentTime = clock();
 disp(sprintf('%d-%d-%d_%d:%d:%d',currentTime(1),currentTime(2)...
 					,currentTime(3),currentTime(4),currentTime(5)...
 					,fix(currentTime(6))));
-%add oms folders
-addpath('~/oms/');
-addpath('~/oms/scripts/');
+
 %configure paths for speech corpora
 if(strcmpi(corpus,'samurai'))
 	dbDir='/erk/daten2/uasr-data-common/ssmg/common/';
@@ -292,8 +304,6 @@ for angleCnt = 1:numel(angles)
 			,'distance',{distances distances}...
 			,'room',room...
 			,'level',{0 levelNorm+level}...
-			,'fileLocation'...
-			,'/erk/daten1/uasr-data-feher/audio/Impulsantworten/3ChanDMA/'...
 			,'length',-1);
 		if(doSecondNoiseSource)
 			options.inputSignals{3} = noiseFile2;
@@ -377,9 +387,8 @@ for angleCnt = 1:numel(angles)
 		nBinMask(angleCnt,1) = results.speechRecognition.n;
 		%adma
 		options.speechRecognition.model = admaModel;
-		options.resultDir = [resultDir 'cardioidResult' dirString];
-		options.speechRecognition.sigDir = ...
-				[resultDir 'cardioid' dirString];
+		options.resultDir = cardioidResultDir;
+		options.speechRecognition.sigDir = cardioidDir;
 		options.tmpDir = options.speechRecognition.sigDir;
 		results = start(options);
 		wrrCardioid(angleCnt,1) = results.speechRecognition.wrr;
@@ -393,9 +402,8 @@ for angleCnt = 1:numel(angles)
 		nCardioid(angleCnt,1) = results.speechRecognition.n;
 		%sphere
 		options.speechRecognition.model = sphereModel;
-		options.resultDir = [resultDir 'sphereResult' dirString];
-		options.speechRecognition.sigDir = ...
-				[resultDir 'sphere' dirString];
+		options.resultDir = sphereResultDir;
+		options.speechRecognition.sigDir = sphereDir;
 		options.tmpDir = options.speechRecognition.sigDir;
 		results = start(options);
 		wrrSphere(angleCnt,1) = results.speechRecognition.wrr;
