@@ -225,7 +225,7 @@ fileNum = numel(fileList{1});
 if(shortSet&&shortSetNum<fileNum)
 	fileNum=shortSetNum;
 end
-if(~exist(resultDir,'dir')) mkdir(resultDir); end
+if(~exist(resultDir,'dir'))
 	mkdir(resultDir);
 end
 %delete([resultDir '/*.csv']);%delete previous results
