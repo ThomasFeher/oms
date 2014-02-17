@@ -3,8 +3,10 @@
 use strict;
 use warnings;
 use File::Path 'rmtree';
+use FileSemaphore;
 
-my $maxProcNum = 3;
+my $maxProcNum = 3; #maximum number of running processes TODO make a parameter
+my $semaFile = "sema"; #file name of the semaphore file TODO make a parameter
 
 die 'too few arguments: '.$#ARGV if ($#ARGV < 2);
 my $model = '3_15';
@@ -23,19 +25,8 @@ print "corpus: $db\n";
 print "log dir: $logDir\n";
 print "sig dir: $sigDir\n";
 
-#test if there are already too many processes running
-my $procNum = 0;
-my $user = `env | grep LOGNAME`;#besser eingebautes %ENV nutzen?
-$user =~ s/.*=//;
-#print "user name: $user\n";
-do {
-	#$procNum = `ps -u $user | grep dlabpro | wc -l`;
-	my @psResult = `ps -u $user`;#consider using pgrep instead
-	#print "ps returned:\n@psResult\n";
-	$procNum = grep(/dlabpro/,@psResult);
-	#print "procNum: $procNum\n";
-	sleep(10) unless ($procNum<$maxProcNum);
-} until($procNum<$maxProcNum);
+#aquire semaphore
+FileSemaphore::aquire($semaFile,$maxProcNum);
 
 #do recognition
 if ($db=~/apollo/i){
@@ -70,3 +61,6 @@ system("echo \"results in: $logDir\" | \\
 
 #remove remote signal files
 rmtree($sigDir) or print "error deleting signal directory:\n$sigDir\n$!\n";
+
+#release semaphore
+FileSemaphore::release;
