@@ -26,7 +26,7 @@ print "log dir: $logDir\n";
 print "sig dir: $sigDir\n";
 
 #aquire semaphore
-FileSemaphore::aquire($semaFile,$maxProcNum);
+my $fh = FileSemaphore::aquire($semaFile,$maxProcNum);
 
 #do recognition
 if ($db=~/apollo/i){
@@ -63,4 +63,4 @@ system("echo \"results in: $logDir\" | \\
 rmtree($sigDir) or print "error deleting signal directory:\n$sigDir\n$!\n";
 
 #release semaphore
-FileSemaphore::release;
+FileSemaphore::release($fh);
