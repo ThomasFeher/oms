@@ -224,15 +224,19 @@ if(options.doSpeechRecognition)
 		%TODO make remote host (eakss1) a config key
 		logFilename = fullfile(resultDirRemote,'log.txt');%log speech recognition here
 		disp('copying files to remote machine...');
-		recognizerFilename = fullfile(omsDir,'speechRecognizer.pl');
+		recogName = fullfile(omsDir,'speechRecognizer.pl');
+		recogNameRemote = fullfile(resultDirRemote,'speechRecognizer.pl');
 		system(['ssh eakss1 mkdir -p ' resultDirRemote]);%create log dir on
 													%remote machine
 		system(['ssh eakss1 mkdir -p ' sigDirRemote]);%create sig dir on remote
 													%machine
-		system(['scp ' sigDir '/*.* eakss1://' sigDirRemote],'-echo');%copy files
+		%copy data files
+		system(['scp ' sigDir '/*.* eakss1://' sigDirRemote],'-echo');
+		%copy recognizer script
+		system(['scp ' recogName ' eakss1://' recogNameRemote],'-echo');
 		disp(['running UASR on remote machine, see local logfile ' logFilename]);
-		system(['ssh eakss1 "nohup perl ' recognizerFilename ' ' sigDir ' '...
-			resultDir ' ' db ' ' model ' >' logFilename ' 2>&1 </dev/null & "']);
+		system(['ssh eakss1 "nohup perl ' recogNameRemote ' ' sigDirRemote ' '...
+			resultDirRemote ' ' db ' ' model ' >' logFilename ' 2>&1 </dev/null & "']);
 		results.speechRecognition = speechRecogGetResults();
 	elseif(options.speechRecognition.doGetRemoteResults)
 		logFilename = fullfile(resultDirRemote,'log.txt');%log speech recognition here
