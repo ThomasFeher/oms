@@ -18,6 +18,7 @@ shortSet = false;%process only first <shortSetNum> files
 shortSetNum = 0;%set to 0 and shortSet to true in order to use already
                 %processed data
 doSpeechRecog = true;
+doSphereAndCardioidSpeechRecog = false;%only relevant in doSpeechRecog is set
 doRemote = true;
 doGetRemoteResults = false;%if true, only results of previous run are gathered
 admaAlgo = 'wiener1';%'binMask','wiener1','wiener2','dist','nsIca','nsNlms'...
@@ -366,11 +367,11 @@ for angleCnt = 1:numel(angles)
 	%speech recognition for all three signals
 	if(doSpeechRecog)
 		clear options;
-		%binary masking
 		options.doSpeechRecognition = true;
 		options.speechRecognition.doRemote = doRemote;
 		options.speechRecognition.doGetRemoteResults = doGetRemoteResults;
 		options.speechRecognition.db = corpus;
+		%adma
 		options.speechRecognition.model = binMaskModel;
 		options.resultDir = admaResultDir;
 		options.speechRecognition.sigDir = admaDir;
@@ -385,55 +386,42 @@ for angleCnt = 1:numel(angles)
 		latBinMask(angleCnt,1) = results.speechRecognition.lat;
 		latConfBinMask(angleCnt,1) = results.speechRecognition.latConf;
 		nBinMask(angleCnt,1) = results.speechRecognition.n;
-		%adma
-		options.speechRecognition.model = admaModel;
-		options.resultDir = cardioidResultDir;
-		options.speechRecognition.sigDir = cardioidDir;
-		options.tmpDir = options.speechRecognition.sigDir;
-		results = start(options);
-		wrrCardioid(angleCnt,1) = results.speechRecognition.wrr;
-		wrrConfCardioid(angleCnt,1) = results.speechRecognition.wrrConf;
-		acrCardioid(angleCnt,1) = results.speechRecognition.acr;
-		acrConfCardioid(angleCnt,1) = results.speechRecognition.acrConf;
-		corCardioid(angleCnt,1) = results.speechRecognition.cor;
-		corConfCardioid(angleCnt,1) = results.speechRecognition.corConf;
-		latCardioid(angleCnt,1) = results.speechRecognition.lat;
-		latConfCardioid(angleCnt,1) = results.speechRecognition.latConf;
-		nCardioid(angleCnt,1) = results.speechRecognition.n;
-		%sphere
-		options.speechRecognition.model = sphereModel;
-		options.resultDir = sphereResultDir;
-		options.speechRecognition.sigDir = sphereDir;
-		options.tmpDir = options.speechRecognition.sigDir;
-		results = start(options);
-		wrrSphere(angleCnt,1) = results.speechRecognition.wrr;
-		wrrConfSphere(angleCnt,1) = results.speechRecognition.wrrConf;
-		acrSphere(angleCnt,1) = results.speechRecognition.acr;
-		acrConfSphere(angleCnt,1) = results.speechRecognition.acrConf;
-		corSphere(angleCnt,1) = results.speechRecognition.cor;
-		corConfSphere(angleCnt,1) = results.speechRecognition.corConf;
-		latSphere(angleCnt,1) = results.speechRecognition.lat;
-		latConfSphere(angleCnt,1) = results.speechRecognition.latConf;
-		nSphere(angleCnt,1) = results.speechRecognition.n;
+		%cardioid
+		if(doSphereAndCardioidSpeechRecog)
+			options.speechRecognition.model = admaModel;
+			options.resultDir = cardioidResultDir;
+			options.speechRecognition.sigDir = cardioidDir;
+			options.tmpDir = options.speechRecognition.sigDir;
+			results = start(options);
+			wrrCardioid(angleCnt,1) = results.speechRecognition.wrr;
+			wrrConfCardioid(angleCnt,1) = results.speechRecognition.wrrConf;
+			acrCardioid(angleCnt,1) = results.speechRecognition.acr;
+			acrConfCardioid(angleCnt,1) = results.speechRecognition.acrConf;
+			corCardioid(angleCnt,1) = results.speechRecognition.cor;
+			corConfCardioid(angleCnt,1) = results.speechRecognition.corConf;
+			latCardioid(angleCnt,1) = results.speechRecognition.lat;
+			latConfCardioid(angleCnt,1) = results.speechRecognition.latConf;
+			nCardioid(angleCnt,1) = results.speechRecognition.n;
+			%sphere
+			options.speechRecognition.model = sphereModel;
+			options.resultDir = sphereResultDir;
+			options.speechRecognition.sigDir = sphereDir;
+			options.tmpDir = options.speechRecognition.sigDir;
+			results = start(options);
+			wrrSphere(angleCnt,1) = results.speechRecognition.wrr;
+			wrrConfSphere(angleCnt,1) = results.speechRecognition.wrrConf;
+			acrSphere(angleCnt,1) = results.speechRecognition.acr;
+			acrConfSphere(angleCnt,1) = results.speechRecognition.acrConf;
+			corSphere(angleCnt,1) = results.speechRecognition.cor;
+			corConfSphere(angleCnt,1) = results.speechRecognition.corConf;
+			latSphere(angleCnt,1) = results.speechRecognition.lat;
+			latConfSphere(angleCnt,1) = results.speechRecognition.latConf;
+			nSphere(angleCnt,1) = results.speechRecognition.n;
+		end %if(doSphereAndCardioidSpeechRecog)
 		clear options;
 	end%if(doSpeechRecog)
 
 	if(doSpeechRecog)
-		dlmwrite(fullfile(resultDir,'wrrSphere.csv')...
-			,[angles(angleCnt) wrrSphere(angleCnt,:) ...
-			wrrConfSphere(angleCnt,:)],'-append');
-		dlmwrite(fullfile(resultDir,'acrSphere.csv')...
-			,[angles(angleCnt) acrSphere(angleCnt,:) ...
-			acrConfSphere(angleCnt,:)],'-append');
-		dlmwrite(fullfile(resultDir,'corSphere.csv')...
-			,[angles(angleCnt) corSphere(angleCnt,:) ...
-			corConfSphere(angleCnt,:)],'-append');
-		dlmwrite(fullfile(resultDir,'latSphere.csv')...
-			,[angles(angleCnt) latSphere(angleCnt,:) ...
-			latConfSphere(angleCnt,:)],'-append');
-		dlmwrite(fullfile(resultDir,'nSphere.csv')...
-			,[angles(angleCnt) nSphere(angleCnt,:)],'-append');
-
 		dlmwrite(fullfile(resultDir,['wrr' admaAlgoUpCase '.csv'])...
 			,[angles(angleCnt) wrrBinMask(angleCnt,:) ...
 			wrrConfBinMask(angleCnt,:)],'-append');
@@ -449,20 +437,37 @@ for angleCnt = 1:numel(angles)
 		dlmwrite(fullfile(resultDir,['n' admaAlgoUpCase '.csv'])...
 			,[angles(angleCnt) nBinMask(angleCnt,:)],'-append');
 
-		dlmwrite(fullfile(resultDir,'wrrCardioid.csv')...
-			,[angles(angleCnt) wrrCardioid(angleCnt,:) ...
-			wrrConfCardioid(angleCnt,:)],'-append');
-		dlmwrite(fullfile(resultDir,'acrCardioid.csv')...
-			,[angles(angleCnt) acrCardioid(angleCnt,:) ...
-			acrConfCardioid(angleCnt,:)],'-append');
-		dlmwrite(fullfile(resultDir,'corCardioid.csv')...
-			,[angles(angleCnt) corCardioid(angleCnt,:) ...
-			corConfCardioid(angleCnt,:)],'-append');
-		dlmwrite(fullfile(resultDir,'latCardioid.csv')...
-			,[angles(angleCnt) latCardioid(angleCnt,:) ...
-			latConfCardioid(angleCnt,:)],'-append');
-		dlmwrite(fullfile(resultDir,'nCardioid.csv')...
-			,[angles(angleCnt) nCardioid(angleCnt,:)],'-append');
+		if(doSphereAndCardioidSpeechRecog)
+			dlmwrite(fullfile(resultDir,'wrrCardioid.csv')...
+				,[angles(angleCnt) wrrCardioid(angleCnt,:) ...
+				wrrConfCardioid(angleCnt,:)],'-append');
+			dlmwrite(fullfile(resultDir,'acrCardioid.csv')...
+				,[angles(angleCnt) acrCardioid(angleCnt,:) ...
+				acrConfCardioid(angleCnt,:)],'-append');
+			dlmwrite(fullfile(resultDir,'corCardioid.csv')...
+				,[angles(angleCnt) corCardioid(angleCnt,:) ...
+				corConfCardioid(angleCnt,:)],'-append');
+			dlmwrite(fullfile(resultDir,'latCardioid.csv')...
+				,[angles(angleCnt) latCardioid(angleCnt,:) ...
+				latConfCardioid(angleCnt,:)],'-append');
+			dlmwrite(fullfile(resultDir,'nCardioid.csv')...
+				,[angles(angleCnt) nCardioid(angleCnt,:)],'-append');
+
+			dlmwrite(fullfile(resultDir,'wrrSphere.csv')...
+				,[angles(angleCnt) wrrSphere(angleCnt,:) ...
+				wrrConfSphere(angleCnt,:)],'-append');
+			dlmwrite(fullfile(resultDir,'acrSphere.csv')...
+				,[angles(angleCnt) acrSphere(angleCnt,:) ...
+				acrConfSphere(angleCnt,:)],'-append');
+			dlmwrite(fullfile(resultDir,'corSphere.csv')...
+				,[angles(angleCnt) corSphere(angleCnt,:) ...
+				corConfSphere(angleCnt,:)],'-append');
+			dlmwrite(fullfile(resultDir,'latSphere.csv')...
+				,[angles(angleCnt) latSphere(angleCnt,:) ...
+				latConfSphere(angleCnt,:)],'-append');
+			dlmwrite(fullfile(resultDir,'nSphere.csv')...
+				,[angles(angleCnt) nSphere(angleCnt,:)],'-append');
+		end %if(doSphereAndCardioidSpeechRecog)
 	end%if(doSpeechRecog)
 
 	if(~doGetRemoteResults)
