@@ -3,6 +3,7 @@ close all;
 
 omsDir = '~/Daten/Tom/oms/';
 resultDir = '/erk/tmp/feher/twinAngle/';
+resultDirRemote = '/erk/tmp/feher/home/';
 tmpDir = resultDir;
 noiseFile = '/erk/daten1/uasr-data-feher/audio/nachrichten_female.wav';
 noiseFile2 = '/erk/daten1/uasr-data-feher/audio/nachrichten_10s.wav';
@@ -259,17 +260,23 @@ for angleCnt = 1:numel(angles)
 		dirString = num2str(angleCnt);%current angle count as directory name
 		%create subdirs of each noise level
 		cardioidDir = [fullfile(resultDir,'cardioid') dirString];
+		cardioidDirRemote = [fullfile(resultDirRemote,'cardioid') dirString];
 		cardioidResultDir = [cardioidDir 'Result'];
+		cardioidResultDirRemote = [cardioidDirRemote 'Result'];
 		if(~exist(cardioidDir,'dir'))
 			mkdir(cardioidDir);
 		end
 		admaDir = [fullfile(resultDir,admaAlgo) dirString];
+		admaDirRemote = [fullfile(resultDirRemote,admaAlgo) dirString];
 		admaResultDir = [admaDir 'Result'];
+		admaResultDirRemote = [admaDirRemote 'Result'];
 		if(~exist(admaDir,'dir'))
 			mkdir(admaDir);
 		end
 		sphereDir = [fullfile(resultDir,'sphere') dirString];
+		sphereDirRemote = [fullfile(resultDirRemote,'sphere') dirString];
 		sphereResultDir = [sphereDir 'Result'];
+		sphereResultDirRemote = [sphereDirRemote 'Result'];
 		if(~exist(sphereDir,'dir'))
 			mkdir(sphereDir);
 		end
@@ -374,7 +381,9 @@ for angleCnt = 1:numel(angles)
 		%adma
 		options.speechRecognition.model = binMaskModel;
 		options.resultDir = admaResultDir;
+		options.speechRecognition.resultDirRemote = admaResultDirRemote;
 		options.speechRecognition.sigDir = admaDir;
+		options.speechRecognition.sigDirRemote = admaDirRemote;
 		options.tmpDir = options.speechRecognition.sigDir;
 		results = start(options);
 		wrrBinMask(angleCnt,1) = results.speechRecognition.wrr;

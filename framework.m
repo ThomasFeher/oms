@@ -212,27 +212,34 @@ end
 %%%%%speech recognition%%%%%
 if(options.doSpeechRecognition)
 	sigDir = options.speechRecognition.sigDir;
+	sigDirRemote = options.speechRecognition.sigDirRemote;
+	resultDirRemote = options.speechRecognition.resultDirRemote;
 	model = options.speechRecognition.model;
 	db = options.speechRecognition.db;
 	disp('speech recognition...');
-	logFilename = fullfile(resultDir,'log.txt');%log speech recognition here
 	logFilename2 = fullfile(resultDir,'logExtern.txt');%copy external log file
 								%back to original machine with this file name
 	if(options.speechRecognition.doRemote&&...
 			~options.speechRecognition.doGetRemoteResults)
 		%TODO make remote host (eakss1) a config key
+		logFilename = fullfile(resultDirRemote,'log.txt');%log speech recognition here
 		disp('copying files to remote machine...');
-		recognizerFilename = fullfile(omsDir,'speechRecognizer.pl');
-		system(['ssh eakss1 mkdir -p ' resultDir]);%create log dir on
+		recogName = fullfile(omsDir,'speechRecognizer.pl');
+		recogNameRemote = fullfile(resultDirRemote,'speechRecognizer.pl');
+		system(['ssh eakss1 mkdir -p ' resultDirRemote]);%create log dir on
 													%remote machine
-		system(['ssh eakss1 mkdir -p ' sigDir]);%create sig dir on remote
+		system(['ssh eakss1 mkdir -p ' sigDirRemote]);%create sig dir on remote
 													%machine
-		system(['scp ' sigDir '/*.* eakss1://' sigDir],'-echo');%copy files
+		%copy data files
+		system(['scp ' sigDir '/*.* eakss1://' sigDirRemote],'-echo');
+		%copy recognizer script
+		system(['scp ' recogName ' eakss1://' recogNameRemote],'-echo');
 		disp(['running UASR on remote machine, see local logfile ' logFilename]);
-		system(['ssh eakss1 "nohup perl ' recognizerFilename ' ' sigDir ' '...
-			resultDir ' ' db ' ' model ' >' logFilename ' 2>&1 </dev/null & "']);
+		system(['ssh eakss1 "nohup perl ' recogNameRemote ' ' sigDirRemote ' '...
+			resultDirRemote ' ' db ' ' model ' >' logFilename ' 2>&1 </dev/null & "']);
 		results.speechRecognition = speechRecogGetResults();
 	elseif(options.speechRecognition.doGetRemoteResults)
+		logFilename = fullfile(resultDirRemote,'log.txt');%log speech recognition here
 		disp('copying result files from remote machine...');
 		disp(['scp eakss1://' logFilename ' ' logFilename2]);
 		system(['scp eakss1://' logFilename ' ' logFilename2],'-echo');
@@ -247,6 +254,7 @@ if(options.doSpeechRecognition)
 		%get results from file
 		results.speechRecognition = speechRecogGetResults(lines,db);
 	else
+		logFilename = fullfile(resultDir,'log.txt');%log speech recognition here
 		results.speechRecognition = ...
 				speechRecognizer(options.speechRecognition.sigDir, ...
 						   options.tmpDir, ...
