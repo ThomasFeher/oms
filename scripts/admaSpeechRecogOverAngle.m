@@ -19,7 +19,7 @@ shortSet = false;%process only first <shortSetNum> files
 shortSetNum = 0;%set to 0 and shortSet to true in order to use already
                 %processed data
 doSpeechRecog = true;
-doSphereAndCardioidSpeechRecog = false;%only relevant in doSpeechRecog is set
+doSphereAndCardioidSpeechRecog = true;%only relevant in doSpeechRecog is set
 doRemote = true;
 doGetRemoteResults = false;%if true, only results of previous run are gathered
 admaAlgo = 'wiener1';%'binMask','wiener1','wiener2','dist','nsIca','nsNlms'...
@@ -399,7 +399,9 @@ for angleCnt = 1:numel(angles)
 		if(doSphereAndCardioidSpeechRecog)
 			options.speechRecognition.model = admaModel;
 			options.resultDir = cardioidResultDir;
+			options.speechRecognition.resultDirRemote = cardioidResultDirRemote;
 			options.speechRecognition.sigDir = cardioidDir;
+			options.speechRecognition.sigDirRemote = cardioidDirRemote;
 			options.tmpDir = options.speechRecognition.sigDir;
 			results = start(options);
 			wrrCardioid(angleCnt,1) = results.speechRecognition.wrr;
@@ -414,7 +416,9 @@ for angleCnt = 1:numel(angles)
 			%sphere
 			options.speechRecognition.model = sphereModel;
 			options.resultDir = sphereResultDir;
+			options.speechRecognition.resultDirRemote = sphereResultDirRemote;
 			options.speechRecognition.sigDir = sphereDir;
+			options.speechRecognition.sigDirRemote = sphereDirRemote;
 			options.tmpDir = options.speechRecognition.sigDir;
 			results = start(options);
 			wrrSphere(angleCnt,1) = results.speechRecognition.wrr;
