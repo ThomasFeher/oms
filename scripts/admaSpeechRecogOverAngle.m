@@ -286,7 +286,6 @@ for angleCnt = 1:numel(angles)
 		file = fileList{1}{fileCnt};%get file from list
 		fileAbs = fullfile(signalPath,file);%concatenate file and path
 		options.(admaSwitch) = true;%set appropriate algo to true
-		eval(optionString);%set appropriate options
 		options.resultDir = resultDir;
 		options.tmpDir = tmpDir;
 		options.doTdRestore = true;
@@ -320,6 +319,7 @@ for angleCnt = 1:numel(angles)
 			%append modified parameters for second noise signal
 			options.impulseResponses = [options.impulseResponses,ir3];
 		end
+		eval(optionString);%set appropriate options
 		%beamforming
 		[result opt] = start(options);
 
