@@ -157,6 +157,8 @@ defaultOptions.speechRecognition.sigDirRemote = '';%here will the signal files
 defaultOptions.speechRecognition.resultDir = '';%here will the results be stored
 defaultOptions.speechRecognition.resultDirRemote = '';%here will the results
                                                %on the remote machine be stored
+defaultOptions.speechRecognition.uasrPath = '~/uasr/';
+defaultOptions.speechRecognition.uasrDataPath = '~/uasr-data/';
 defaultOptions.speechRecognition.db = 'samurai';%'samurai', 'apollo'
 defaultOptions.speechRecognition.model = '3_15';
 %%%%%speech recognition%%%%%

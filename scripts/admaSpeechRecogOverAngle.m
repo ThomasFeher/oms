@@ -8,6 +8,8 @@ tmpDir = resultDir;
 noiseFile = '/erk/daten1/uasr-data-feher/audio/nachrichten_female.wav';
 noiseFile2 = '/erk/daten1/uasr-data-feher/audio/nachrichten_10s.wav';
 irDatabaseDir = '/erk/daten1/uasr-data-feher/audio/Impulsantworten/'
+uasrPath = '~/Daten/Tom/uasr/';
+uasrDataPath = '~/Daten/Tom/uasr-data/';
 
 %%%%%parameters%%%%%
 distances = [0.4];
@@ -109,7 +111,7 @@ if(strcmpi(corpus,'samurai'))
 	filelistPath = [dbDir 'flists/SAMURAI_0.flst'];
 	signalPath = [dbDir '/sig'];
 elseif(strcmpi(corpus,'apollo'))
-	dbDir='/erk/daten2/uasr-maintenance/uasr-data/apollo/';
+	dbDir = fullfile(uasrDataPath,'apollo/');
 	filelistPath = [dbDir '1020.flst'];
 	signalPath = [dbDir '/sig'];
 else
@@ -374,10 +376,13 @@ for angleCnt = 1:numel(angles)
 	%speech recognition for all three signals
 	if(doSpeechRecog)
 		clear options;
+		%common options
 		options.doSpeechRecognition = true;
 		options.speechRecognition.doRemote = doRemote;
 		options.speechRecognition.doGetRemoteResults = doGetRemoteResults;
 		options.speechRecognition.db = corpus;
+		options.speechRecognition.uasrPath = uasrPath;
+		options.speechRecognition.uasrDataPath = uasrDataPath;
 		%adma
 		options.speechRecognition.model = binMaskModel;
 		options.resultDir = admaResultDir;
