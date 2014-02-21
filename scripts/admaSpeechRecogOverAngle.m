@@ -269,7 +269,7 @@ for angleCnt = 1:numel(angles)
 	%snrBeforeAllBm=zeros(numel(angles),1);
 	snrAllBm=zeros(numel(angles),1);
 		disp(sprintf('current angle: %d',angles(angleCnt)));
-		dirString = num2str(angleCnt);%current angle count as directory name
+		dirString = sprintf('%03d',angles(angleCnt));%current angle as directory name
 		%create subdirs of each noise level
 		cardioidDir = [fullfile(resultDir,'cardioid') dirString];
 		cardioidDirRemote = [fullfile(resultDirRemote,'cardioid') dirString];
