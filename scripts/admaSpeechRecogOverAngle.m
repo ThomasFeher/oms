@@ -35,6 +35,8 @@ model = 'adapt';%model to use for speech recognition: 'adapt', 'adaptNoise'
                      %algorithm (sphere,adma,binMask)
                      %'adaptNoise' uses the corresponding 10dB SNR noise models
 room = 'studio';%'studio' 'praktikum'
+doStoreTmpData = true;%uses lots of space in tmpDir, but improves speed when
+                      %run a second time with different algorithm
 %%%%%parameters%%%%%
 
 %models:
@@ -321,6 +323,7 @@ for angleCnt = 1:numel(angles)
 			%append modified parameters for second noise signal
 			options.impulseResponses = [options.impulseResponses,ir3];
 		end
+		options.doFdStore = doStoreTmpData;
 		eval(optionString);%set appropriate options
 		%beamforming
 		[result opt] = start(options);
