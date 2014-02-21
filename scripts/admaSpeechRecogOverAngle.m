@@ -230,6 +230,14 @@ elseif(strcmpi(admaAlgo,'eight')&strcmpi(mic,'twin'))
 		            'options.twinMic.nullSteering.angle = 90;'];
 elseif(strcmpi(admaAlgo,'binMask')&strcmpi(mic,'three'))
 	admaSwitch = 'doADMA';
+	optionString = ['options.adma.Mask = true;' ...
+	                'options.adma.pattern = ''cardioid'';'];
+elseif(strcmpi(admaAlgo,'nsFix')&strcmpi(mic,'three'))
+	admaSwitch = 'doADMA';
+	optionString = ['options.adma.pattern = ''best'';'];
+elseif(strcmpi(admaAlgo,'eight')&strcmpi(mic,'three'))
+	admaSwitch = 'doADMA';
+	optionString = ['options.adma.pattern = ''best'';'];
 elseif(regexpi(admaAlgo,'wiener')&strcmpi(mic,'three'))
 	error('not yet implemented');
 else
@@ -304,10 +312,8 @@ for angleCnt = 1:numel(angles)
 		options.twinMic.beamformer.angle = 60;
 		options.twinMic.wienerFilter.update = 1;
 		options.twinMic.nullSteering.angle = angles(angleCnt);
-		options.adma.pattern = 'cardioid';
-		options.adma.Mask = true;
 		options.adma.theta1 = speaker_angle;
-		%options.adma.theta2 = angles(angleCnt);
+		options.adma.theta2 = angles(angleCnt);
 		options.adma.mask_update = 0.2;
 		options.adma.mask_angle = 0.9;
 		options.impulseResponses = struct(...
