@@ -44,5 +44,9 @@ else
 	error ([db ' is not a valid corpus name']);
 end
 
+if(~isMatlab())
+	disp(out); % octave doesn't know the -echo key
+end
+
 %parse and return result
 results = speechRecogGetResults(out,db);
