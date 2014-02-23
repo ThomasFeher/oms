@@ -100,6 +100,7 @@ case {'ICA','ica'}
 
 case {'ICA2','ica2'}
 	disp('start ica2');
+	u = options.twinMic.nullSteering.update;
 	iterations = options.twinMic.nullSteering.iterations;
 	if(isnumeric(coeffNS))% no calculation, just apply W (for eval. signals)
 		WNew = coeffNS;
@@ -119,13 +120,47 @@ case {'ICA2','ica2'}
 		WNew = FastICA(block,iterations); % do FastICA
 		disp('result from this iteration alone:');
 		disp(WNew);
+		%prevent complex valued results
+		WNewComplex = iscomplex(WNew);
+		if(any(WNewComplex))
+			WNew = W;% keep old value
+			disp('skipping result, because it contains complex numbers');
+		end
 		disp('complete result:')
 		WNew = WNew * W; % include the "pre-demixing" based on previous run
 		disp(WNew);
+		%prevent phase inversion
+		[noi,index] = max(abs(WNew.'));% find main look direction
+		% invert if necessary
+		if(WNew(1,index(1)) < 0)
+			WNew(1,:) = -WNew(1,:);
+			disp('inverting vector 1');
+		end
+		if(WNew(2,index(2)) < 0)
+			WNew(2,:) = -WNew(2,:);
+			disp('inverting vector 2');
+		end
+		%prevent "flipping"
+		diffWNotFlipped = vecAngle(W(1,:),WNew(1,:)) + vecAngle(W(1,:),WNew(1,:));
+		disp('diffWNotFlipped:');
+		disp(diffWNotFlipped);
+		diffWFlipped = vecAngle(W(1,:),WNew(2,:)) + vecAngle(W(2,:),WNew(1,:));
+		disp('diffWFlipped:');
+		disp(diffWFlipped);
+		if(diffWFlipped>diffWNotFlipped)
+			WNew = WNew([2 1],:);
+			disp('flipping vectors');
+		end
+		% limit amplification
+		maxVal = max(abs(WNew));
+		if(maxVal>1e+6)
+			WNew = WNew ./ (maxVal/1e+6);
+			disp('limiting');
+		end
 	end
 
-	angleNew = WNew;
-	WNorm = [WNew(1,:)./max(abs(WNew(1,:)));WNew(2,:)./max(abs(WNew(2,:)))];
+	angleNew = u*WNew + (1-u)*W;
+	WNorm = [angleNew(1,:)./max(abs(angleNew(1,:)));angleNew(2,:)./max(abs(angleNew(2,:)))];
 	disp('normalized result:');
 	disp(WNorm);
 	sigVecNew = WNorm * sigVec;
