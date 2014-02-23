@@ -6,8 +6,6 @@ function angles = twinIcaToAngle(W)
 if(size(W)~=[2,2])
 	error('input must be a matrix of size 2x2');
 end
-disp('input');
-disp(W);
 
 angles = [180,0]; % initialize with back to back cardioids
 
@@ -15,43 +13,29 @@ angles = [180,0]; % initialize with back to back cardioids
 [~,index] = max(abs(W.'));% find main look direction
 if(W(1,index(1)) < 0)% invert if necessary
 	W(1,:) = -W(1,:);
-	disp('inverting vector 1');
 end
 if(W(2,index(2)) < 0)% invert if necessary
 	W(2,:) = -W(2,:);
-	disp('inverting vector 2');
 end
 
 % normalize to maximum per vector
-disp('normalize');
-W
-[maxVals maxIdx]= max(abs(W),[],2)% find maximum
-maxVals  = maxVals .* sign(W(sub2ind([2;2],[1;2],maxIdx))) % retrieve signs, to see phase inversion
+[maxVals maxIdx] = max(abs(W),[],2); % find maximum
+maxVals = maxVals .* sign(W(sub2ind([2;2],[1;2],maxIdx))); % retrieve signs,
+                                                       %to see phase inversion
 W = bsxfun('rdivide',W,maxVals); % normalize and remove phase inversion
-W
 
 % estimate look direction
 betaIdx = mod(maxIdx,2)+1;%index of the not maximum values
-disp(betaIdx);
 backCardIdx = find(betaIdx==1);
-disp(backCardIdx);
 betaIdx = sub2ind([2,2],1:rows(W),betaIdx.');
-disp('betaIdx');
-disp(betaIdx);
-disp('W(betaIdx)');
-disp(W(betaIdx));
 
 % calculate angles
 angles = acos((W(betaIdx)-1)./(W(betaIdx)+1))/pi*180;
-angles
 
 % correct angles of backwards looking cardioids
 angles(backCardIdx) = 180 - angles(backCardIdx);
-disp('correct angles of backwards looking cardioids');
-angles
 
 % sort
-disp('sort');
 if(angles(1)<90&&angles(2)<90)
 	[~,maxIdx] = max(angles);
 	angles(maxIdx) = 90;
@@ -62,7 +46,6 @@ end
 if(angles(1)<angles(2))
 	angles = angles([2;1]);
 end
-angles
 
 %!assert(twinIcaToAngle([1,0;0,1]),[180,0],eps);
 %!assert(twinIcaToAngle([0,1;1,0]),[180,0],eps);
