@@ -47,7 +47,7 @@ case {'ICA','ica'}
 		W = angle2W(angle);
 		WNew = W;
 	else %calculate new beta
-		if(nargin<4) %use angle set in options as previous value
+		if(nargin<4) %use angle set in options as previous value TODO will never happen, because if statement before will through an error in this case
 			angle = options.twinMic.nullSteering.angle;
 			W = angle2W(angle);
 		% use value from previous iteration to calculate a new value
@@ -62,6 +62,7 @@ case {'ICA','ica'}
 		end
 		WNew = FastICA(block,iterations);
 	end
+	disp(WNew);
 	%normalize to first value to get form x-beta*y
 	WNorm = [WNew(1,:)/WNew(1,1);WNew(2,:)/WNew(2,1)];
 	%test first vector for ill condition
@@ -70,14 +71,17 @@ case {'ICA','ica'}
 			(all(~WNew(1,:)))||... %zero vector?
 			(~(WNorm(1,2)>=-1&&WNorm(1,2)<=0)))) %second entry between 0 and -1?
 		%first is ok, so we take it as result
+		disp("nsIca vector 1");
 	elseif(~(any(isnan(WNew(2,:)))||...
 			(~isreal(WNew(2,:)))||...
 			(all(~WNew(2,:)))||...
 			(~(WNorm(2,2)>=-1&&WNorm(2,2)<=0))))
 		%second vector is ok, so we use this one
 		WNew = [WNew(2,:);-1 1];%take second vector
+		disp("nsIca vector 2");
 	else %no good results -> use old W
 		WNew = W;
+		disp("nsIca vector bad");
 	end
 
 	angleNew = beta2angle(-WNew(1,2)/WNew(1,1));%calculate new angle
@@ -94,6 +98,38 @@ case {'ICA','ica'}
 		keyboard
 	end
 
+case {'ICA2','ica2'}
+	disp('start ica2');
+	iterations = options.twinMic.nullSteering.iterations;
+	if(isnumeric(coeffNS))% no calculation, just apply W (for eval. signals)
+		WNew = coeffNS;
+	else % calculate new W
+		if(isempty(coeffNS.previous))% no start value, use that from option key
+			angle = options.twinMic.nullSteering.angle;
+			W = angle2W(angle);
+			disp('previous from option key:');
+			disp(W);
+			disp('options key:');
+			disp(angle);
+			block = W * block;% demix with previous value
+		else % use the previous value as starting point
+			W = coeffNS.previous;
+			block = W * block;% demix with previous value
+		end
+		WNew = FastICA(block,iterations); % do FastICA
+		disp('result from this iteration alone:');
+		disp(WNew);
+		disp('complete result:')
+		WNew = WNew * W; % include the "pre-demixing" based on previous run
+		disp(WNew);
+	end
+
+	angleNew = WNew;
+	WNorm = [WNew(1,:)./max(abs(WNew(1,:)));WNew(2,:)./max(abs(WNew(2,:)))];
+	disp('normalized result:');
+	disp(WNorm);
+	sigVecNew = WNorm * sigVec;
+
 otherwise
 	error(sprintf('Unknown Twin Microphone Null Steering Algorithm: %s',...
 			options.twinMic.nullSteering.algorithm));
@@ -105,10 +141,35 @@ beta = (-cos(angleRad)-1)./(cos(angleRad)-1);
 
 function W = angle2W(angle)
 beta = angle2beta(angle);
-W = [1 -beta;-1 1];
-W(1,:) = W(1,:)/norm(W(1,:));
-W(2,1) = sqrt(1/(1+(W(1,1)/W(1,2))^2));
-W(2,2) = -W(1,1)*W(2,1)/W(1,2);
+W = [1 -beta;-beta 1];
+%W(1,:) = W(1,:)/norm(W(1,:));
+%W(2,1) = sqrt(1/(1+(W(1,1)/W(1,2))^2));
+%W(2,2) = -W(1,1)*W(2,1)/W(1,2);
 
 function angle = beta2angle(beta)
 angle = acos((beta-1)./(beta+1))/pi*180;
+
+%!shared options, sigVec, coeffNS
+%! sigVec = [rand(1,10);zeros(1,10)];
+%! options.twinMic.nullSteering.algorithm = 'ica';
+%! options.twinMic.nullSteering.update = 1;
+%! options.twinMic.nullSteering.iterations = 10;
+%! options.twinMic.nullSteering.angle = 90;
+%! coeffNS.previous = [];
+%!test #NS-ICA with 1 source at front
+%! block = [rand(1,10);zeros(1,10)];
+%! [sigNew,angle] = twinMicNullSteering(options,sigVec,block,coeffNS);
+%! assert(angle,180,eps);
+%!test #NS-ICA with 1 source at front and 1 at 90°
+%! sig1 = rand(1,10);
+%! sig2 = rand(1,10);
+%! block = [sig1+0.5*sig2;0.5*sig2];
+%! [sigNew,angle] = twinMicNullSteering(options,sigVec,block,coeffNS);
+%! assert(angle,90,eps);
+%!test #NS-ICA2 with 1 source at front, 1 source at 180°
+%! options.twinMic.nullSteering.algorithm = 'ica2';
+%! block = [sin(linspace(0,4*pi,1000));rand(1,1000)-0.5];
+%! [sigNew,W] = twinMicNullSteering(options,sigVec,block,coeffNS);
+%! WNorm = [W(1,:)./max(abs(W(1,:)));W(2,:)./max(abs(W(2,:)))];
+%! assert(min(WNorm(1,:))<0.1);
+%! assert(min(WNorm(2,:))<0.1);

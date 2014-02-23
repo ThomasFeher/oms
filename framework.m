@@ -465,7 +465,8 @@ if(doTwinMic(options))
 	coeffWf.previous = []; %initialize coefficients for Wiener filter
 	coeffNS.previous = []; %initialize coefficients for null steering
 	%initialize array for estimatet null steering angles (NLMS and ICA)
-	results.twinMic.nullSteering.angle  = zeros(blockNum,1);
+	results.twinMic.nullSteering.angle = cell(blockNum,1);
+	%results.twinMic.nullSteering.angle  = zeros(blockNum,1);
 	for(blockCnt=1:blockNum) %process blockwise
 		sigVecProc = squeeze(sigVec(:,blockCnt,:)); %current processing block
 		if(options.doDma)
@@ -474,7 +475,7 @@ if(doTwinMic(options))
 			[sigVecProc coeffNS.previous] = twinMicNullSteering(options,...
 					sigVecProc,squeeze(blockMat(:,blockCnt,:)),coeffNS);
 			%store angle progression
-			results.twinMic.nullSteering.angle(blockCnt) = coeffNS.previous;
+			results.twinMic.nullSteering.angle{blockCnt} = coeffNS.previous;
 		elseif(options.doTwinMicBeamforming&&options.doDistanceFiltering)
 			[noi maskBf.previous] = twinMicBeamformer(options,...
 					sigVecProc,maskBf);

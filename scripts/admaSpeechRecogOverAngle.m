@@ -35,7 +35,7 @@ model = 'adapt';%model to use for speech recognition: 'adapt', 'adaptNoise'
                      %algorithm (sphere,adma,binMask)
                      %'adaptNoise' uses the corresponding 10dB SNR noise models
 room = 'studio';%'studio' 'praktikum'
-doStoreTmpData = true;%uses lots of space in tmpDir, but improves speed when
+doStoreTmpData = false;%uses lots of space in tmpDir, but improves speed when
                       %run a second time with different algorithm
 %%%%%parameters%%%%%
 
@@ -159,7 +159,7 @@ if(exist('model','var') & strcmpi(model,'adapt'))
 		binMaskModel = ['3_15_A_' mic '_000_binMask_label'];
 	elseif(regexpi(admaAlgo,'wiener'))
 		binMaskModel = ['3_15_A_' mic '_000_wiener_label'];
-	elseif(strcmpi(admaAlgo,'nsIca'))
+	elseif(regexpi(admaAlgo,'nsIca'))
 		binMaskModel = ['3_15_A_' mic '_000_adma_label'];
 	elseif(strcmpi(admaAlgo,'nsNlms'))
 		binMaskModel = ['3_15_A_' mic '_000_adma_label'];
@@ -177,7 +177,7 @@ elseif(exist('model','var') & strcmpi(model,'adaptNoise'))
 		binMaskModel = ['3_15_A_' mic '_000_binMask_noise_label'];
 	elseif(regexpi(admaAlgo,'wiener'))
 		binMaskModel = ['3_15_A_' mic '_000_wiener_noise_label'];
-	elseif(strcmpi(admaAlgo,'nsIca'))
+	elseif(regexpi(admaAlgo,'nsIca'))
 		binMaskModel = ['3_15_A_' mic '_000_adma_noise_label'];
 	elseif(strcmpi(admaAlgo,'nsNlms'))
 		binMaskModel = ['3_15_A_' mic '_000_adma_noise_label'];
@@ -211,6 +211,12 @@ elseif(strcmpi(admaAlgo,'wiener2')&strcmpi(mic,'twin'))
 elseif(strcmpi(admaAlgo,'nsIca')&strcmpi(mic,'twin'))
 	admaSwitch = 'doTwinMicNullSteering';
 	optionString = ['options.twinMic.nullSteering.algorithm = ''ICA'';'...
+					'options.twinMic.nullSteering.update = 0.1;'...
+		            'options.twinMic.nullSteering.angle = angles(angleCnt);'...
+					'options.twinMic.nullSteering.iterations = 1;'];
+elseif(strcmpi(admaAlgo,'nsIca2')&strcmpi(mic,'twin'))
+	admaSwitch = 'doTwinMicNullSteering';
+	optionString = ['options.twinMic.nullSteering.algorithm = ''ICA2'';'...
 					'options.twinMic.nullSteering.update = 0.1;'...
 		            'options.twinMic.nullSteering.angle = angles(angleCnt);'...
 					'options.twinMic.nullSteering.iterations = 1;'];
@@ -266,7 +272,6 @@ for angleCnt = 1:numel(angles)
 	snrSphereAll=zeros(numel(angles),1);
 	snrAllCard=zeros(numel(angles),1);
 	snrImpAllBm=zeros(numel(angles),1);
-	%snrBeforeAllBm=zeros(numel(angles),1);
 	snrAllBm=zeros(numel(angles),1);
 		disp(sprintf('current angle: %d',angles(angleCnt)));
 		dirString = sprintf('%03d',angles(angleCnt));%current angle as directory name
@@ -284,6 +289,15 @@ for angleCnt = 1:numel(angles)
 		admaResultDirRemote = [admaDirRemote 'Result'];
 		if(~exist(admaDir,'dir'))
 			mkdir(admaDir);
+		end
+		if(strcmpi(admaAlgo,'nsIca2'))% evaluate second signal too
+			admaDir2 = [admaDir '2'];
+			admaDir2Remote = [admaDirRemote '2'];
+			admaResultDir2 = [admaResultDir '2'];
+			admaResultDir2Remote = [admaResultDirRemote '2'];
+			if(~exist(admaDir2,'dir'))
+				mkdir(admaDir2);
+			end
 		end
 		sphereDir = [fullfile(resultDir,'sphere') dirString];
 		sphereDirRemote = [fullfile(resultDirRemote,'sphere') dirString];
@@ -361,6 +375,12 @@ for angleCnt = 1:numel(angles)
 		signal = signal/max(abs(signal))*0.95;
 		wavName = fullfile(admaDir,file);
 		wavwrite(signal,opt.fs,wavName);
+		if(strcmpi(admaAlgo,'nsIca2'))% evaluate second signal too
+			signal = result.signal(2,:).';
+			signal = signal/max(abs(signal))*0.95;
+			wavName = fullfile(admaDir2,file);
+			wavwrite(signal,opt.fs,wavName);
+		end
 		%cardioid
 		if(strcmpi(mic,'twin'))
 			signal = result.input.signal(1,:).';
@@ -409,6 +429,23 @@ for angleCnt = 1:numel(angles)
 		latBinMask(angleCnt,1) = results.speechRecognition.lat;
 		latConfBinMask(angleCnt,1) = results.speechRecognition.latConf;
 		nBinMask(angleCnt,1) = results.speechRecognition.n;
+		if(strcmpi(admaAlgo,'nsIca2'))% evaluate second signal too
+			options.resultDir = admaResultDir2;
+			options.speechRecognition.resultDirRemote = admaResultDir2Remote;
+			options.speechRecognition.sigDir = admaDir2;
+			options.speechRecognition.sigDirRemote = admaDir2Remote;
+			options.tmpDir = options.speechRecognition.sigDir;
+			results = start(options);
+			wrrBinMask2(angleCnt,1) = results.speechRecognition.wrr;
+			wrrConfBinMask2(angleCnt,1) = results.speechRecognition.wrrConf;
+			acrBinMask2(angleCnt,1) = results.speechRecognition.acr;
+			acrConfBinMask2(angleCnt,1) = results.speechRecognition.acrConf;
+			corBinMask2(angleCnt,1) = results.speechRecognition.cor;
+			corConfBinMask2(angleCnt,1) = results.speechRecognition.corConf;
+			latBinMask2(angleCnt,1) = results.speechRecognition.lat;
+			latConfBinMask2(angleCnt,1) = results.speechRecognition.latConf;
+			nBinMask2(angleCnt,1) = results.speechRecognition.n;
+		end
 		%cardioid
 		if(doSphereAndCardioidSpeechRecog)
 			options.speechRecognition.model = admaModel;
@@ -463,6 +500,22 @@ for angleCnt = 1:numel(angles)
 			latConfBinMask(angleCnt,:)],'-append');
 		dlmwrite(fullfile(resultDir,['n' admaAlgoUpCase '.csv'])...
 			,[angles(angleCnt) nBinMask(angleCnt,:)],'-append');
+		if(strcmpi(admaAlgo,'nsIca2'))% evaluate second signal too
+			dlmwrite(fullfile(resultDir,['wrr' admaAlgoUpCase '2.csv'])...
+				,[angles(angleCnt) wrrBinMask2(angleCnt,:) ...
+				wrrConfBinMask2(angleCnt,:)],'-append');
+			dlmwrite(fullfile(resultDir,['acr' admaAlgoUpCase '2.csv'])...
+				,[angles(angleCnt) acrBinMask2(angleCnt,:) ...
+				acrConfBinMask2(angleCnt,:)],'-append');
+			dlmwrite(fullfile(resultDir,['cor' admaAlgoUpCase '2.csv'])...
+				,[angles(angleCnt) corBinMask2(angleCnt,:) ...
+				corConfBinMask2(angleCnt,:)],'-append');
+			dlmwrite(fullfile(resultDir,['lat' admaAlgoUpCase '2.csv'])...
+				,[angles(angleCnt) latBinMask2(angleCnt,:) ...
+				latConfBinMask2(angleCnt,:)],'-append');
+			dlmwrite(fullfile(resultDir,['n' admaAlgoUpCase '2.csv'])...
+				,[angles(angleCnt) nBinMask2(angleCnt,:)],'-append');
+		end
 
 		if(doSphereAndCardioidSpeechRecog)
 			dlmwrite(fullfile(resultDir,'wrrCardioid.csv')...
