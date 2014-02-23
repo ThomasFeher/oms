@@ -47,6 +47,10 @@ if(angles(1)<angles(2))
 	angles = angles([2;1]);
 end
 
+% limit
+angles(find(angles<0)) = 0;
+angles(find(angles>180)) = 180;
+
 %!assert(twinIcaToAngle([1,0;0,1]),[180,0],eps);
 %!assert(twinIcaToAngle([0,1;1,0]),[180,0],eps);
 %!assert(twinIcaToAngle([0.5,0.5;10,0]),[180,90],eps);

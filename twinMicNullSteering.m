@@ -62,7 +62,6 @@ case {'ICA','ica'}
 		end
 		WNew = FastICA(block,iterations);
 	end
-	disp(WNew);
 	%normalize to first value to get form x-beta*y
 	WNorm = [WNew(1,:)/WNew(1,1);WNew(2,:)/WNew(2,1)];
 	%test first vector for ill condition
@@ -71,17 +70,14 @@ case {'ICA','ica'}
 			(all(~WNew(1,:)))||... %zero vector?
 			(~(WNorm(1,2)>=-1&&WNorm(1,2)<=0)))) %second entry between 0 and -1?
 		%first is ok, so we take it as result
-		disp("nsIca vector 1");
 	elseif(~(any(isnan(WNew(2,:)))||...
 			(~isreal(WNew(2,:)))||...
 			(all(~WNew(2,:)))||...
 			(~(WNorm(2,2)>=-1&&WNorm(2,2)<=0))))
 		%second vector is ok, so we use this one
 		WNew = [WNew(2,:);-1 1];%take second vector
-		disp("nsIca vector 2");
 	else %no good results -> use old W
 		WNew = W;
-		disp("nsIca vector bad");
 	end
 
 	angleNew = beta2angle(-WNew(1,2)/WNew(1,1));%calculate new angle
@@ -99,70 +95,32 @@ case {'ICA','ica'}
 	end
 
 case {'ICA2','ica2'}
-	disp('start ica2');
 	u = options.twinMic.nullSteering.update;
 	iterations = options.twinMic.nullSteering.iterations;
 	if(isnumeric(coeffNS))% no calculation, just apply W (for eval. signals)
-		WNew = coeffNS;
+		WNew = angle2W(coeffNS);
 	else % calculate new W
 		if(isempty(coeffNS.previous))% no start value, use that from option key
 			angle = options.twinMic.nullSteering.angle;
 			W = angle2W(angle);
-			disp('previous from option key:');
-			disp(W);
-			disp('options key:');
-			disp(angle);
 			block = W * block;% demix with previous value
 		else % use the previous value as starting point
-			W = coeffNS.previous;
+			angle = coeffNS.previous;
+			W = angle2W(angle);
 			block = W * block;% demix with previous value
 		end
 		WNew = FastICA(block,iterations); % do FastICA
-		disp('result from this iteration alone:');
-		disp(WNew);
 		%prevent complex valued results
 		WNewComplex = iscomplex(WNew);
 		if(any(WNewComplex))
 			WNew = W;% keep old value
-			disp('skipping result, because it contains complex numbers');
 		end
-		disp('complete result:')
 		WNew = WNew * W; % include the "pre-demixing" based on previous run
-		disp(WNew);
-		%prevent phase inversion
-		[noi,index] = max(abs(WNew.'));% find main look direction
-		% invert if necessary
-		if(WNew(1,index(1)) < 0)
-			WNew(1,:) = -WNew(1,:);
-			disp('inverting vector 1');
-		end
-		if(WNew(2,index(2)) < 0)
-			WNew(2,:) = -WNew(2,:);
-			disp('inverting vector 2');
-		end
-		%prevent "flipping"
-		diffWNotFlipped = vecAngle(W(1,:),WNew(1,:)) + vecAngle(W(1,:),WNew(1,:));
-		disp('diffWNotFlipped:');
-		disp(diffWNotFlipped);
-		diffWFlipped = vecAngle(W(1,:),WNew(2,:)) + vecAngle(W(2,:),WNew(1,:));
-		disp('diffWFlipped:');
-		disp(diffWFlipped);
-		if(diffWFlipped>diffWNotFlipped)
-			WNew = WNew([2 1],:);
-			disp('flipping vectors');
-		end
-		% limit amplification
-		maxVal = max(abs(WNew));
-		if(maxVal>1e+6)
-			WNew = WNew ./ (maxVal/1e+6);
-			disp('limiting');
-		end
+		angleNew = twinIcaToAngle(WNew);
+		angleNew = u*angleNew + (1-u)*angle;
 	end
 
-	angleNew = u*WNew + (1-u)*W;
-	WNorm = [angleNew(1,:)./max(abs(angleNew(1,:)));angleNew(2,:)./max(abs(angleNew(2,:)))];
-	disp('normalized result:');
-	disp(WNorm);
+	WNorm = angle2W(angleNew);
 	sigVecNew = WNorm * sigVec;
 
 otherwise
@@ -175,11 +133,26 @@ angleRad = angle/180*pi;
 beta = (-cos(angleRad)-1)./(cos(angleRad)-1);
 
 function W = angle2W(angle)
-beta = angle2beta(angle);
-W = [1 -beta;-beta 1];
-%W(1,:) = W(1,:)/norm(W(1,:));
-%W(2,1) = sqrt(1/(1+(W(1,1)/W(1,2))^2));
-%W(2,2) = -W(1,1)*W(2,1)/W(1,2);
+if(numel(angle)<2) % create opposite pattern
+	if(angle(1)>=90)
+		angle(2) = 0;
+	else
+		angle(2) = 180;
+	end
+end
+for cnt=1:numel(angle)
+	if(angle(cnt)<90)
+		angle(cnt) = 180-angle(cnt);
+		beta(cnt) = angle2beta(angle(cnt));
+		W(cnt,:) = [-beta(cnt),1];
+	else
+		beta(cnt) = angle2beta(angle(cnt));
+		W(cnt,:) = [1,-beta(cnt)];
+	end
+end
+if(angle(1)==90&&angle(2)==90)
+	W(2,:) = [0,1];
+end
 
 function angle = beta2angle(beta)
 angle = acos((beta-1)./(beta+1))/pi*180;
@@ -188,23 +161,22 @@ angle = acos((beta-1)./(beta+1))/pi*180;
 %! sigVec = [rand(1,10);zeros(1,10)];
 %! options.twinMic.nullSteering.algorithm = 'ica';
 %! options.twinMic.nullSteering.update = 1;
-%! options.twinMic.nullSteering.iterations = 10;
+%! options.twinMic.nullSteering.iterations = 5;
 %! options.twinMic.nullSteering.angle = 90;
 %! coeffNS.previous = [];
 %!test #NS-ICA with 1 source at front
-%! block = [rand(1,10);zeros(1,10)];
+%! block = [rand(1,100);zeros(1,100)];
 %! [sigNew,angle] = twinMicNullSteering(options,sigVec,block,coeffNS);
 %! assert(angle,180,eps);
 %!test #NS-ICA with 1 source at front and 1 at 90°
-%! sig1 = rand(1,10);
-%! sig2 = rand(1,10);
+%! sig1 = rand(1,100);
+%! sig2 = rand(1,100);
 %! block = [sig1+0.5*sig2;0.5*sig2];
 %! [sigNew,angle] = twinMicNullSteering(options,sigVec,block,coeffNS);
 %! assert(angle,90,eps);
 %!test #NS-ICA2 with 1 source at front, 1 source at 180°
 %! options.twinMic.nullSteering.algorithm = 'ica2';
-%! block = [sin(linspace(0,4*pi,1000));rand(1,1000)-0.5];
-%! [sigNew,W] = twinMicNullSteering(options,sigVec,block,coeffNS);
-%! WNorm = [W(1,:)./max(abs(W(1,:)));W(2,:)./max(abs(W(2,:)))];
-%! assert(min(WNorm(1,:))<0.1);
-%! assert(min(WNorm(2,:))<0.1);
+%! block = [sin(linspace(0,4*pi,1000));cos(linspace(0,10*pi,1000))-0.5];
+%! [sigNew,angles] = twinMicNullSteering(options,sigVec,block,coeffNS);
+%! assert(angles(1),180,10);
+%! assert(angles(2),0,10);
