@@ -103,6 +103,7 @@ case {'ICA2','ica2'}
 		if(isempty(coeffNS.previous))% no start value, use that from option key
 			angle = options.twinMic.nullSteering.angle;
 			W = angle2W(angle);
+			angle = twinIcaToAngle(W); % calculate second angle
 			block = W * block;% demix with previous value
 		else % use the previous value as starting point
 			angle = coeffNS.previous;
@@ -114,10 +115,12 @@ case {'ICA2','ica2'}
 		WNewComplex = iscomplex(WNew);
 		if(any(WNewComplex))
 			WNew = W;% keep old value
+			angleNew = angle;
+		else
+			WNew = WNew * W; % include the "pre-demixing" based on previous run
+			angleNew = twinIcaToAngle(WNew);
+			angleNew = u*angleNew + (1-u)*angle;
 		end
-		WNew = WNew * W; % include the "pre-demixing" based on previous run
-		angleNew = twinIcaToAngle(WNew);
-		angleNew = u*angleNew + (1-u)*angle;
 	end
 
 	WNorm = angle2W(angleNew);
