@@ -10,16 +10,7 @@ if(nargin<2)
 	forceFrontBack = true;
 end
 
-% prevent phase inversion
-[~,index] = max(abs(W.'));% find main look direction
-if(W(1,index(1)) < 0)% invert if necessary
-	W(1,:) = -W(1,:);
-end
-if(W(2,index(2)) < 0)% invert if necessary
-	W(2,:) = -W(2,:);
-end
-
-% normalize to maximum per vector
+% normalize to maximum per vector and remove phase inversion
 [maxVals maxIdx] = max(abs(W),[],2); % find maximum
 maxVals = maxVals .* sign(W(sub2ind([2;2],[1;2],maxIdx))); % retrieve signs,
                                                        %to see phase inversion
