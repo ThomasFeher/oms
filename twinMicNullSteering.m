@@ -97,6 +97,7 @@ case {'ICA','ica'}
 case {'ICA2','ica2'}
 	u = options.twinMic.nullSteering.update;
 	iterations = options.twinMic.nullSteering.iterations;
+	doForceFrontBack = options.twinMic.nullSteering.doForceFrontBack;
 	if(isnumeric(coeffNS))% no calculation, just apply W (for eval. signals)
 		WNew = angle2W(coeffNS);
 	else % calculate new W
@@ -118,7 +119,7 @@ case {'ICA2','ica2'}
 			angleNew = angle;
 		else
 			WNew = WNew * W; % include the "pre-demixing" based on previous run
-			angleNew = twinIcaToAngle(WNew);
+			angleNew = twinIcaToAngle(WNew,doForceFrontBack);
 			angleNew = u*angleNew + (1-u)*angle;
 		end
 	end

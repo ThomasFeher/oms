@@ -67,12 +67,14 @@ defaultOptions.distanceGate.threshold = 0.7;%[0..1]
 %beam width in degree, '30' corresponds to: -15 to 15 degree
 defaultOptions.twinMic.beamformer.angle = 30;
 defaultOptions.twinMic.beamformer.update = 1;
-defaultOptions.twinMic.nullSteering.algorithm = 'fix'; %'fix','NLMS','ICA'
+defaultOptions.twinMic.nullSteering.algorithm = 'fix'; %'fix','NLMS','ICA','ICA2'
 defaultOptions.twinMic.nullSteering.angle = 90; %in degree, only for fix algo
+                           % is the starting value for the adaptive algorithms
 defaultOptions.twinMic.nullSteering.mu = 0.01; %learning rate, only NLMS!
 defaultOptions.twinMic.nullSteering.alpha = 0; %only NLMS!
-defaultOptions.twinMic.nullSteering.update = 0.1; %only ICA!
-defaultOptions.twinMic.nullSteering.iterations = 1;%only ICA!
+defaultOptions.twinMic.nullSteering.update = 0.1; %only NS-ICA!
+defaultOptions.twinMic.nullSteering.iterations = 1;%only NS-ICA!
+defaultOptions.twinMic.nullSteering.doForceFrontBack = false;%only NS-ICA2!
 defaultOptions.twinMic.wienerFilter.update = 1;
 defaultOptions.twinMic.wienerFilter.signalPlusNoiseEstimate = 'cardioid';
 						%'sphere' or 'cardioid' (means front cardioid)

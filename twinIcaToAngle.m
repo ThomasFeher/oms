@@ -2,12 +2,13 @@
 %first angle is limited to (90,180) and second angle to (0,90)
 %@input W: ICA demixing matrix
 %@output angles: estimated angles of the pattern zero [angle1,angle2]
-function angles = twinIcaToAngle(W)
+function angles = twinIcaToAngle(W,forceFrontBack)
 if(size(W)~=[2,2])
 	error('input must be a matrix of size 2x2');
 end
-
-angles = [180,0]; % initialize with back to back cardioids
+if(nargin<2)
+	forceFrontBack = true;
+end
 
 % prevent phase inversion
 [~,index] = max(abs(W.'));% find main look direction
@@ -27,24 +28,33 @@ W = bsxfun('rdivide',W,maxVals); % normalize and remove phase inversion
 % estimate look direction
 betaIdx = mod(maxIdx,2)+1;%index of the not maximum values
 backCardIdx = find(betaIdx==1);
-betaIdx = sub2ind([2,2],1:rows(W),betaIdx.');
+betaIdxS = sub2ind([2,2],1:rows(W),betaIdx.');
+
+% set positive betas to zero
+WSub = W(betaIdxS);
+WSub(WSub>0) = 0;
+W(betaIdxS) = WSub;
 
 % calculate angles
-angles = abs(acos((W(betaIdx)-1)./(W(betaIdx)+1))/pi*180);
+angles = acos((-W(betaIdxS)-1)./(-W(betaIdxS)+1))/pi*180;
 
 % correct angles of backwards looking cardioids
 angles(backCardIdx) = 180 - angles(backCardIdx);
 
 % sort
-if(angles(1)<90&&angles(2)<90)
-	[~,maxIdx] = max(angles);
-	angles(maxIdx) = 90;
-elseif(angles(1)>90&&angles(2)>90)
-	[~,minIdx] = min(angles);
-	angles(minIdx) = 90;
-end
-if(angles(1)<angles(2))
-	angles = angles([2;1]);
+if(forceFrontBack) % force one zero in front half and one zero in back half
+	if(angles(1)<90&&angles(2)<90)
+		[~,maxIdx] = max(angles);
+		angles(maxIdx) = 90;
+	elseif(angles(1)>90&&angles(2)>90)
+		[~,minIdx] = min(angles);
+		angles(minIdx) = 90;
+	end
+	if(angles(1)<angles(2))
+		angles = angles([2;1]);
+	end
+else % simply sort
+	angles = sort(angles,'descend');
 end
 
 % limit
@@ -53,4 +63,7 @@ angles(find(angles>180)) = 180;
 
 %!assert(twinIcaToAngle([1,0;0,1]),[180,0],eps);
 %!assert(twinIcaToAngle([0,1;1,0]),[180,0],eps);
-%!assert(twinIcaToAngle([0.5,0.5;10,0]),[180,90],eps);
+%!assert(twinIcaToAngle([0.5,-0.5;10,0]),[180,90],eps);
+%!assert(twinIcaToAngle([0.6,0.5;10,0]),[180,90],eps);
+%!assert(twinIcaToAngle([0,1;0,1],true),[90,0],eps);
+%!assert(twinIcaToAngle([0,1;0,1],false),[0,0],eps);
