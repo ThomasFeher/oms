@@ -105,6 +105,7 @@ case {'ICA2','ica2'}
 			angle = options.twinMic.nullSteering.angle;
 			W = angle2W(angle);
 			angle = twinIcaToAngle(W); % calculate second angle
+			angle = sort(angle,'descend');
 			block = W * block;% demix with previous value
 		else % use the previous value as starting point
 			angle = coeffNS.previous;
@@ -120,6 +121,7 @@ case {'ICA2','ica2'}
 		else
 			WNew = WNew * W; % include the "pre-demixing" based on previous run
 			angleNew = twinIcaToAngle(WNew,doForceFrontBack);
+			angleNew = sort(angleNew,'descend');
 			angleNew = u*angleNew + (1-u)*angle;
 		end
 	end
@@ -167,6 +169,7 @@ angle = acos((beta-1)./(beta+1))/pi*180;
 %! options.twinMic.nullSteering.update = 1;
 %! options.twinMic.nullSteering.iterations = 5;
 %! options.twinMic.nullSteering.angle = 90;
+%! options.twinMic.nullSteering.doForceFrontBack = false;
 %! coeffNS.previous = [];
 %!test #NS-ICA with 1 source at front
 %! block = [rand(1,100);zeros(1,100)];

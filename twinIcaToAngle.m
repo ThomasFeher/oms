@@ -41,20 +41,16 @@ angles = acos((-W(betaIdxS)-1)./(-W(betaIdxS)+1))/pi*180;
 % correct angles of backwards looking cardioids
 angles(backCardIdx) = 180 - angles(backCardIdx);
 
-% sort
+% force one angle to front half and one angle to back half
 if(forceFrontBack) % force one zero in front half and one zero in back half
-	if(angles(1)<90&&angles(2)<90)
-		[~,maxIdx] = max(angles);
-		angles(maxIdx) = 90;
-	elseif(angles(1)>90&&angles(2)>90)
-		[~,minIdx] = min(angles);
-		angles(minIdx) = 90;
+	[anglesSort sortIdx] = sort(angles);
+	if(anglesSort(2)<90)
+		anglesSort(2) = 90;
 	end
-	if(angles(1)<angles(2))
-		angles = angles([2;1]);
+	if(anglesSort(1)>90)
+		anglesSort(1) = 90;
 	end
-else % simply sort
-	angles = sort(angles,'descend');
+	angles = anglesSort(sortIdx); % revert sorting
 end
 
 % limit
@@ -62,8 +58,8 @@ angles(find(angles<0)) = 0;
 angles(find(angles>180)) = 180;
 
 %!assert(twinIcaToAngle([1,0;0,1]),[180,0],eps);
-%!assert(twinIcaToAngle([0,1;1,0]),[180,0],eps);
-%!assert(twinIcaToAngle([0.5,-0.5;10,0]),[180,90],eps);
-%!assert(twinIcaToAngle([0.6,0.5;10,0]),[180,90],eps);
-%!assert(twinIcaToAngle([0,1;0,1],true),[90,0],eps);
+%!assert(twinIcaToAngle([0,1;1,0]),[0,180],eps);
+%!assert(twinIcaToAngle([0.5,-0.5;10,0]),[90,180],eps);
+%!assert(twinIcaToAngle([0.6,0.5;10,0]),[90,180],eps);
+%!assert(twinIcaToAngle([0,1;0,1],true),[0,90],eps);
 %!assert(twinIcaToAngle([0,1;0,1],false),[0,0],eps);
