@@ -30,7 +30,7 @@ backCardIdx = find(betaIdx==1);
 betaIdx = sub2ind([2,2],1:rows(W),betaIdx.');
 
 % calculate angles
-angles = acos((W(betaIdx)-1)./(W(betaIdx)+1))/pi*180;
+angles = abs(acos((W(betaIdx)-1)./(W(betaIdx)+1))/pi*180);
 
 % correct angles of backwards looking cardioids
 angles(backCardIdx) = 180 - angles(backCardIdx);
