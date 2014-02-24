@@ -1,8 +1,12 @@
-%takes the demixing matrix of the ICA and returns the zero angles
-%first angle is limited to (90,180) and second angle to (0,90)
-%@input W: ICA demixing matrix
-%@output angles: estimated angles of the pattern zero [angle1,angle2]
-function angles = twinIcaToAngle(W,forceFrontBack)
+% takes the demixing matrix of the ICA and returns the zero angles
+% first angle is limited to (90,180) and second angle to (0,90)
+% input
+% @W: ICA demixing matrix
+% output
+% @angles: estimated angles of the pattern zero [angle1,angle2]
+% @beta: corresponding beta (amplification of back cardioid)
+
+function [angles beta] = twinIcaToAngle(W,forceFrontBack)
 if(size(W)~=[2,2])
 	error('input must be a matrix of size 2x2');
 end
@@ -22,9 +26,9 @@ backCardIdx = find(betaIdx==1);
 betaIdxS = sub2ind([2,2],1:rows(W),betaIdx.');
 
 % set positive betas to zero
-WSub = W(betaIdxS);
-WSub(WSub>0) = 0;
-W(betaIdxS) = WSub;
+beta = W(betaIdxS);
+beta(beta>0) = 0;
+W(betaIdxS) = beta;
 
 % calculate angles
 angles = acos((-W(betaIdxS)-1)./(-W(betaIdxS)+1))/pi*180;
