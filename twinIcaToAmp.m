@@ -4,9 +4,9 @@
 % input:
 % @W: ICA dmeixing matrix
 % output:
-% @amp: estimated amplification for each signal s on each channel c
+% @ampSource: estimated amplification for each signal s on each channel c
 %             [s1-c1,s2-c1;s1-c2,s2-c2]
-function amp = twinIcaToAmp(W)
+function [ampSource ampFront] = twinIcaToAmp(W)
 if(size(W)~=[2,2])
 	error('input must be a matrix of size 2x2');
 end
@@ -22,16 +22,41 @@ ampPattern = twinPattern(beta,zeroAngle([2,1]));
 
 % calculate amplification in look direction of the both channels (either 0° or
 % 180°)
-[ampMax maxIdx] = max(abs(W),[],2);
+[ampFront maxIdx] = max(abs(W),[],2);
+ampFront = ampFront.';
 
 % calculate resulting amplification
-amp = ampMax' .* ampPattern;
+ampSource = ampFront .* ampPattern;
 
-%!assert(twinIcaToAmp([1 0;0 1]),[1 1],eps);
-%!assert(twinIcaToAmp([1 0;0 1]*10),[1 1]*10,eps*10);
-%!assert(twinIcaToAmp([1 0;1 0]),[1 1],eps);
-%!assert(twinIcaToAmp([1 0;1 0]*10),[1 1]*10,eps*10);
-%!assert(twinIcaToAmp([1 -1;0.5 -0.5]),[0 0],eps);
-%!assert(twinIcaToAmp([1 -1;0.5 -0.5]*10),[0 0]*10,eps*10);
-%!assert(twinIcaToAmp([1 0;1 -1]),[0.5 1],eps);
-%!assert(twinIcaToAmp([1 0;1 -1]*10),[0.5 1]*10,eps*10);
+%!test
+%! [ampSource,ampFront] = twinIcaToAmp([1 0;0 1]);
+%! assert(ampSource,[1 1],eps);
+%! assert(ampFront,[1 1],eps);
+%!test
+%! [ampSource,ampFront] = twinIcaToAmp([1 0;0 1]*10);
+%! assert(ampSource,[1 1]*10,eps*10);
+%! assert(ampFront,[1 1]*10,eps*10);
+%!test
+%! [ampSource,ampFront] = twinIcaToAmp([1 0;1 0]);
+%! assert(ampSource,[1 1],eps);
+%! assert(ampFront,[1 1],eps);
+%!test
+%! [ampSource,ampFront] = twinIcaToAmp([1 0;1 0]*10);
+%! assert(ampSource,[1 1]*10,eps*10);
+%! assert(ampFront,[1 1]*10,eps*10);
+%!test
+%! [ampSource,ampFront] = twinIcaToAmp([1 -1;0.5 -0.5]);
+%! assert(ampSource,[0 0],eps);
+%! assert(ampFront,[1 0.5],eps);
+%!test
+%! [ampSource,ampFront] = twinIcaToAmp([1 -1;0.5 -0.5]*10);
+%! assert(ampSource,[0 0]*10,eps*10);
+%! assert(ampFront,[1 0.5]*10,eps*10);
+%!test
+%! [ampSource,ampFront] = twinIcaToAmp([1 0;1 -1]);
+%! assert(ampSource,[0.5 1],eps);
+%! assert(ampFront,[1 1],eps);
+%!test
+%! [ampSource,ampFront] = twinIcaToAmp([1 0;1 -1]*10);
+%! assert(ampSource,[0.5 1]*10,eps*10);
+%! assert(ampFront,[1 1]*10,eps*10);
