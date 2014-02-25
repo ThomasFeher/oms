@@ -30,6 +30,9 @@ beta = W(betaIdxS);
 beta(beta>0) = 0;
 W(betaIdxS) = beta;
 
+% correct betas to form (x - beta)
+beta = beta .* -1;
+
 % calculate angles
 angles = acos((-W(betaIdxS)-1)./(-W(betaIdxS)+1))/pi*180;
 
@@ -41,9 +44,11 @@ if(forceFrontBack) % force one zero in front half and one zero in back half
 	[anglesSort sortIdx] = sort(angles);
 	if(anglesSort(2)<90)
 		anglesSort(2) = 90;
+		beta(sortIdx(2)) = 1;
 	end
 	if(anglesSort(1)>90)
 		anglesSort(1) = 90;
+		beta(sortIdx(1)) = 1;
 	end
 	angles = anglesSort(sortIdx); % revert sorting
 end
@@ -52,9 +57,27 @@ end
 angles(find(angles<0)) = 0;
 angles(find(angles>180)) = 180;
 
-%!assert(twinIcaToAngle([1,0;0,1]),[180,0],eps);
-%!assert(twinIcaToAngle([0,1;1,0]),[0,180],eps);
-%!assert(twinIcaToAngle([0.5,-0.5;10,0]),[90,180],eps);
-%!assert(twinIcaToAngle([0.6,0.5;10,0]),[90,180],eps);
-%!assert(twinIcaToAngle([0,1;0,1],true),[0,90],eps);
-%!assert(twinIcaToAngle([0,1;0,1],false),[0,0],eps);
+%!test
+%! [angles,beta] = twinIcaToAngle([1,0;0,1]);
+%! assert(angles,[180,0],eps);
+%! assert(beta,[0,0],eps);
+%!test
+%! [angles,beta] = twinIcaToAngle([0,1;1,0]);
+%! assert(angles,[0,180],eps);
+%! assert(beta,[0,0],eps);
+%!test
+%! [angles,beta] = twinIcaToAngle([0.5,-0.5;10,0]);
+%! assert(angles,[90,180],eps);
+%! assert(beta,[1,0],eps);
+%!test
+%! [angles,beta] = twinIcaToAngle([0.6,0.5;10,0],true);
+%! assert(angles,[90,180],eps);
+%! assert(beta,[1,0],eps);
+%!test
+%! [angles,beta] = twinIcaToAngle([0,1;0,1],true);
+%! assert(angles,[0,90],eps);
+%! assert(beta,[0,1],eps);
+%!test
+%! [angles,beta] = twinIcaToAngle([0,1;0,1],false);
+%! assert(angles,[0,0],eps);
+%! assert(beta,[0,0],eps);
