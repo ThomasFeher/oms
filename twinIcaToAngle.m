@@ -11,7 +11,7 @@ if(size(W)~=[2,2])
 	error('input must be a matrix of size 2x2');
 end
 if(nargin<2)
-	forceFrontBack = true;
+	forceFrontBack = false;
 end
 
 % normalize to maximum per vector and remove phase inversion
