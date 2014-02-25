@@ -10,18 +10,25 @@ if(size(W)~=[2,2])
 end
 
 % calculate angle of zeros
-[zeroAngle beta] = twinIcaToAngle(W);
+[zeroAngle beta] = twinIcaToAngle(W,false);
+
+% find backwards looking patterns
+zeroAngle(zeroAngle>90) = 180-zeroAngle(zeroAngle>90);
 
 % calculate pattern in direction of opposite zero angle
-ampPattern = twinPattern(beta,zeroAngle([2,1])); % TODO implement
+ampPattern = twinPattern(beta,zeroAngle([2,1]));
 
 % calculate amplification in look direction of the cardioids (0° and 180°)
 [ampMax maxIdx] = max(abs(W),[],2); % find maximum
 
 % calculate resulting amplification
-amp = ampMax .* ampPattern;
+amp = ampMax' .* ampPattern;
 
-%!assert(twinIcaToAmp([1 0;0 1],[1 1],eps));
-%!assert(twinIcaToAmp([1 0;1 0],[1 1],eps));
-%!assert(twinIcaToAmp([1 -1;0.5 -0.5],[0 0],eps));
-%!assert(twinIcaToAmp([1 0;1 -1],[0.5 1],eps));
+%!assert(twinIcaToAmp([1 0;0 1]),[1 1],eps);
+%!assert(twinIcaToAmp([1 0;0 1]*10),[1 1]*10,eps*10);
+%!assert(twinIcaToAmp([1 0;1 0]),[1 1],eps);
+%!assert(twinIcaToAmp([1 0;1 0]*10),[1 1]*10,eps*10);
+%!assert(twinIcaToAmp([1 -1;0.5 -0.5]),[0 0],eps);
+%!assert(twinIcaToAmp([1 -1;0.5 -0.5]*10),[0 0]*10,eps*10);
+%!assert(twinIcaToAmp([1 0;1 -1]),[0.5 1],eps);
+%!assert(twinIcaToAmp([1 0;1 -1]*10),[0.5 1]*10,eps*10);
