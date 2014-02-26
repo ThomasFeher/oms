@@ -134,10 +134,12 @@ otherwise
 			options.twinMic.nullSteering.algorithm));
 end %switch
 
+%TODO use twinAngleToWeight
 function beta = angle2beta(angle)
 angleRad = angle/180*pi;
 beta = (-cos(angleRad)-1)./(cos(angleRad)-1);
 
+%TODO use twinAngleToMixMat
 function W = angle2W(angle)
 if(numel(angle)<2) % create opposite pattern
 	if(angle(1)>=90)

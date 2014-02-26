@@ -54,6 +54,7 @@ defaultOptions.doDistanceGate = false;%TODO implement
 defaultOptions.doTwinMicBeamforming = false;
 defaultOptions.doTwinMicNullSteering = false;
 defaultOptions.doTwinMicWienerFiltering = false;
+defaultOptions.doTwinMicIcaMap = false;
 defaultOptions.dma.angle = 90;%angle of zero sensitivity in degree
 %ratio between power of sphere and figure eight signals,used to determine
 		%the distance
@@ -80,6 +81,13 @@ defaultOptions.twinMic.wienerFilter.signalPlusNoiseEstimate = 'cardioid';
 						%'sphere' or 'cardioid' (means front cardioid)
 defaultOptions.twinMic.wienerFilter.signalToFilter = 'cardioid';%'cardioid'
 											%(means front cardioid) or 'sphere'
+defaultOptions.twinMic.icaMap.angle = [180,0] % starting angles of the pattern zeros
+defaultOptions.twinMic.icaMap.iterations = 1; % number of iterations of ica
+                                              % nullsteering per block
+defaultOptions.twinMic.icaMap.update = 0.1; % update coefficient for:
+                                            % angles of sources 
+											% amplification of sources
+											% binary mask
 %%%%%Twin Microphone%%%%%
 
 %%%%%beamforming%%%%%

@@ -25,7 +25,7 @@ doSphereAndCardioidSpeechRecog = true;%only relevant in doSpeechRecog is set
 doRemote = true;
 doGetRemoteResults = false;%if true, only results of previous run are gathered
 admaAlgo = 'wiener1';%'binMask','wiener1','wiener2','dist','nsIca','nsNlms'...
-                   %,'nsFix','eight'
+                   %,'nsFix','eight','icaMap','nsIca2'
 corpus = 'apollo';%'samurai','apollo';
 mic = 'twin';%'twin', 'three'
 model = 'adapt';%model to use for speech recognition: 'adapt', 'adaptNoise'
@@ -167,6 +167,8 @@ if(exist('model','var') & strcmpi(model,'adapt'))
 		binMaskModel = ['3_15_A_' mic '_000_adma_label'];
 	elseif(strcmpi(admaAlgo,'eight'))
 		binMaskModel = ['3_15_A_' mic '_000_adma_label'];
+	elseif(strcmpi(admaAlgo,'icaMap'))
+		binMaskModel = ['3_15_A_' mic '_000_binMask_label'];
 	else
 		error(['unknown algorithm: ' admaAlgo]);
 	end
@@ -185,6 +187,8 @@ elseif(exist('model','var') & strcmpi(model,'adaptNoise'))
 		binMaskModel = ['3_15_A_' mic '_000_adma_noise_label'];
 	elseif(strcmpi(admaAlgo,'eight'))
 		binMaskModel = ['3_15_A_' mic '_000_adma_noise_label'];
+	elseif(strcmpi(admaAlgo,'icaMap'))
+		binMaskModel = ['3_15_A_' mic '_000_binMask_noise_label'];
 	else
 		error(['unknown algorithm: ' admaAlgo]);
 	end
@@ -234,6 +238,8 @@ elseif(strcmpi(admaAlgo,'eight')&strcmpi(mic,'twin'))
 	admaSwitch = 'doTwinMicNullSteering';
 	optionString = ['options.twinMic.nullSteering.algorithm = ''fix'';'...
 		            'options.twinMic.nullSteering.angle = 90;'];
+elseif(strcmpi(admaAlgo,'icaMap')&strcmpi(mic,'twin'))
+	admaSwitch = 'doTwinMicIcaMap';
 elseif(strcmpi(admaAlgo,'binMask')&strcmpi(mic,'three'))
 	admaSwitch = 'doADMA';
 	optionString = ['options.adma.Mask = true;' ...
@@ -260,11 +266,7 @@ end
 if(~exist(resultDir,'dir'))
 	mkdir(resultDir);
 end
-%delete([resultDir '/*.csv']);%delete previous results
 system(['rename .csv .csv.old ' resultDir '*.csv']);%rename previous results
-%if(~exist([resultDir 'cardioid'],'dir')) mkdir([resultDir 'cardioid']); end
-%if(~exist([resultDir 'binMask'],'dir')) mkdir([resultDir 'binMask']); end
-%if(~exist([resultDir 'sphere'],'dir')) mkdir([resultDir 'sphere']); end
 
 for angleCnt = 1:numel(angles)
 	%reset mean snr
@@ -290,7 +292,7 @@ for angleCnt = 1:numel(angles)
 		if(~exist(admaDir,'dir'))
 			mkdir(admaDir);
 		end
-		if(strcmpi(admaAlgo,'nsIca2'))% evaluate second signal too
+		if(strcmpi(admaAlgo,'nsIca2')|strcmpi(admaAlgo,'icaMap'))% evaluate second signal too
 			admaDir2 = [admaDir '2'];
 			admaDir2Remote = [admaDirRemote '2'];
 			admaResultDir2 = [admaResultDir '2'];
@@ -375,7 +377,7 @@ for angleCnt = 1:numel(angles)
 		signal = signal/max(abs(signal))*0.95;
 		wavName = fullfile(admaDir,file);
 		wavwrite(signal,opt.fs,wavName);
-		if(strcmpi(admaAlgo,'nsIca2'))% evaluate second signal too
+		if(strcmpi(admaAlgo,'nsIca2')|strcmpi(admaAlgo,'icaMap'))% evaluate second signal too
 			signal = result.signal(2,:).';
 			signal = signal/max(abs(signal))*0.95;
 			wavName = fullfile(admaDir2,file);
@@ -429,7 +431,7 @@ for angleCnt = 1:numel(angles)
 		latBinMask(angleCnt,1) = results.speechRecognition.lat;
 		latConfBinMask(angleCnt,1) = results.speechRecognition.latConf;
 		nBinMask(angleCnt,1) = results.speechRecognition.n;
-		if(strcmpi(admaAlgo,'nsIca2'))% evaluate second signal too
+		if(strcmpi(admaAlgo,'nsIca2')|strcmpi(admaAlgo,'icaMap'))% evaluate second signal too
 			options.resultDir = admaResultDir2;
 			options.speechRecognition.resultDirRemote = admaResultDir2Remote;
 			options.speechRecognition.sigDir = admaDir2;
@@ -500,7 +502,7 @@ for angleCnt = 1:numel(angles)
 			latConfBinMask(angleCnt,:)],'-append');
 		dlmwrite(fullfile(resultDir,['n' admaAlgoUpCase '.csv'])...
 			,[angles(angleCnt) nBinMask(angleCnt,:)],'-append');
-		if(strcmpi(admaAlgo,'nsIca2'))% evaluate second signal too
+		if(strcmpi(admaAlgo,'nsIca2')|strcmpi(admaAlgo,'icaMap'))% evaluate second signal too
 			dlmwrite(fullfile(resultDir,['wrr' admaAlgoUpCase '2.csv'])...
 				,[angles(angleCnt) wrrBinMask2(angleCnt,:) ...
 				wrrConfBinMask2(angleCnt,:)],'-append');

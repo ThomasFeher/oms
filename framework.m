@@ -466,7 +466,7 @@ if(doTwinMic(options))
 	coeffNS.previous = []; %initialize coefficients for null steering
 	%initialize array for estimatet null steering angles (NLMS and ICA)
 	results.twinMic.nullSteering.angle = cell(blockNum,1);
-	%results.twinMic.nullSteering.angle  = zeros(blockNum,1);
+	paramsIcaMap.previous = [];% initialize parameter for ICA-MAP
 	for(blockCnt=1:blockNum) %process blockwise
 		sigVecProc = squeeze(sigVec(:,blockCnt,:)); %current processing block
 		if(options.doDma)
@@ -493,6 +493,12 @@ if(doTwinMic(options))
 		elseif(options.doTwinMicWienerFiltering)
 			[sigVecProc coeffWf.previous] = twinMicWienerFilter(options,...
 					sigVecProc,coeffWf);
+		elseif(options.doTwinMicIcaMap)
+			[sigVecProc paramsIcaMap.previous] = twinMicIcaMap(...
+			                              options.twinMic.icaMap,...
+			                              sigVecProc,...
+										  squeeze(blockMat(:,blockCnt,:)),...
+										  paramsIcaMap);
 		end
 		sigVecNew(:,blockCnt,:) = sigVecProc;
 		if(options.doConvolution)
@@ -519,6 +525,10 @@ if(doTwinMic(options))
 				elseif(options.doTwinMicWienerFiltering)
 					sigVecEvalProc = twinMicWienerFilter(options,...
 							sigVecEvalProc,coeffWf.previous);
+				elseif(options.doTwinMicIcaMap)
+					sigVecEvalProc = twinMicIcaMap(options.twinMic.icaMap,...
+					                               sigVecEvalProc,...
+												   [],paramsIcaMap.previous);
 				end
 				sigVecEvalNew{srcCnt}(:,blockCnt,:) = sigVecEvalProc;
 			end
