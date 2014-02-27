@@ -14,7 +14,7 @@
 % output:
 % @sigVecProc: processed frequency domain signal vector
 % @maskNew: binary mask used to process signal
-function [sigVecProc,paramsNew] = twinMap(options,sigVec,block,params)
+function [sigVecProc,paramsNew] = twinMicIcaMap(options,sigVec,block,params)
 
 if(isfield(params,'previous'))
 	if(isempty(params.previous))
