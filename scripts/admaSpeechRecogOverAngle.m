@@ -247,7 +247,8 @@ elseif(strcmpi(admaAlgo,'nsFix')&strcmpi(mic,'three'))
 	optionString = ['options.adma.pattern = ''best'';'];
 elseif(strcmpi(admaAlgo,'eight')&strcmpi(mic,'three'))
 	admaSwitch = 'doADMA';
-	optionString = ['options.adma.pattern = ''best'';'];
+	optionString = ['options.adma.pattern = ''best'';'...
+	                'options.adma.theta2 = 90;'];
 elseif(regexpi(admaAlgo,'wiener')&strcmpi(mic,'three'))
 	error('not yet implemented');
 else
