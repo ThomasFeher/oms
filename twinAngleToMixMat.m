@@ -20,10 +20,10 @@ end
 for cnt=1:numel(angle)
 	if(angle(cnt)<90)
 		angle(cnt) = 180-angle(cnt);
-		beta(cnt) = angle2beta(angle(cnt));
+		beta(cnt) = twinAngleToWeight(angle(cnt));
 		W(cnt,:) = [-beta(cnt),1];
 	else
-		beta(cnt) = angle2beta(angle(cnt));
+		beta(cnt) = twinAngleToWeight(angle(cnt));
 		W(cnt,:) = [1,-beta(cnt)];
 	end
 end
