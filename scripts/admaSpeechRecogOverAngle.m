@@ -92,6 +92,9 @@ diary(fullfile(resultDir,['log' admaAlgoUpCase '.txt']));%switch logging on
 %display file name
 disp(['script: ' mfilename]);
 
+%display revision hash
+disp(['revision: ' system('git rev-parse HEAD')]);
+
 %display all variables
 disp('settings:');
 variables = who;%store variable names in cell array
