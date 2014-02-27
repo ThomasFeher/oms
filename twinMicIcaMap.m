@@ -18,12 +18,17 @@ function [sigVecProc,paramsNew] = twinMicIcaMap(options,sigVec,block,params)
 
 if(isfield(params,'previous'))
 	if(isempty(params.previous))
-		W =twinAngleToMixMat(options.angle);
+		params.previous.angles = options.angle;
+		params.previous.ampFront = [1 1];
+		isFirst = true;
 	else
-		% calculate weight matrix
-		W = twinAngleToMixMat(params.previous.angles);
-		W = bsxfun(@times,W,params.previous.ampFront.');
+		isFirst = false;
 	end
+
+	% calculate weight matrix
+	W = twinAngleToMixMat(params.previous.angles);
+	W = bsxfun(@times,W,params.previous.ampFront.');
+
 	% ica with new signal
 	blockPremix = W * block;
 	WNew = FastICA(blockPremix,options.iterations);
@@ -38,9 +43,12 @@ if(isfield(params,'previous'))
 	ampFront = ampFront(sortIdx);
 
 	% update angles and amplifications
-	angles = options.update*angles + (1-options.update)*params.previous.angles;
-	ampFront = options.update*ampFront
-	         + (1-options.update)*params.previous.ampFront;
+	if(~isFirst)
+		angles = options.update*angles ...
+		       + (1-options.update)*params.previous.angles;
+		ampFront = options.update*ampFront ...
+				 + (1-options.update)*params.previous.ampFront;
+	end
 
 	% calculate ampSrc from updated values
 	ampSrc = twinIcaToAmp(bsxfun(@times,twinAngleToMixMat(angles),ampFront.'));
@@ -61,7 +69,9 @@ if(isfield(params,'previous'))
 	mask = [ap1>ap2;ap2>ap1]; % get maximum
 
 	% update mask
-	mask = options.update*mask + (1-options.update)*params.previous.mask;
+	if(~isFirst)
+		mask = options.update*mask + (1-options.update)*params.previous.mask;
+	end
 
 	%store estimated parameters
 	paramsNew.mask = mask;
