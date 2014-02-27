@@ -43,7 +43,7 @@ if(isfield(params,'previous'))
 	         + (1-options.update)*params.previous.ampFront;
 
 	% calculate ampSrc from updated values
-	ampSrc = twinIcaToAmp(bsxfun(@times,twinAngleToMixMat(angles),ampFront.');
+	ampSrc = twinIcaToAmp(bsxfun(@times,twinAngleToMixMat(angles),ampFront.'));
 
 	% calculate nullsteering weights
 	WNs = twinAngleToMixMat(angles);
