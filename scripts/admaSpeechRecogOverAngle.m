@@ -298,6 +298,9 @@ for angleCnt = 1:numel(angles)
 
 	if(~doGetRemoteResults)
 	for fileCnt=1:fileNum
+		if(fileCnt>1)
+			diary off;
+		end
 		file = fileList{1}{fileCnt};%get file from list
 		fileAbs = fullfile(signalPath,file);%concatenate file and path
 		options.(admaSwitch) = true;%set appropriate algo to true
@@ -384,6 +387,7 @@ for angleCnt = 1:numel(angles)
 		wavwrite(signal,opt.fs,wavName);
 	end%filCnt
 	end%if(~doGetRemoteResults)
+	diary on;
 
 	%speech recognition for all three signals
 	if(doSpeechRecog)
