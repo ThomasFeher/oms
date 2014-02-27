@@ -16,3 +16,6 @@ the script using this framework in scripts/.
 
 At the moment everything should work in Octave and Matlab, but because of not
 having access to Matlab in the future this can not be guarantied anymore.
+
+To run all unit tests go to the oms directory, start octave and type
+	runtests '.'
