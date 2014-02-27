@@ -92,8 +92,9 @@ diary(fullfile(resultDir,['log' admaAlgoUpCase '.txt']));%switch logging on
 %display file name
 disp(['script: ' mfilename]);
 
-%display revision hash
-disp(['revision: ' system('git rev-parse HEAD')]);
+%display commit hash
+[~,gitCommit] = system('git rev-parse HEAD');
+disp(['commit: ' gitCommit]);
 
 %display all variables
 disp('settings:');
@@ -252,7 +253,8 @@ elseif(strcmpi(admaAlgo,'nsFix')&strcmpi(mic,'three'))
 	optionString = ['options.adma.pattern = ''best'';'];
 elseif(strcmpi(admaAlgo,'eight')&strcmpi(mic,'three'))
 	admaSwitch = 'doADMA';
-	optionString = ['options.adma.pattern = ''best'';'];
+	optionString = ['options.adma.pattern = ''best'';'...
+	                'options.adma.theta2 = 90;'];
 elseif(regexpi(admaAlgo,'wiener')&strcmpi(mic,'three'))
 	error('not yet implemented');
 else
