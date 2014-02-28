@@ -84,10 +84,12 @@ defaultOptions.twinMic.wienerFilter.signalToFilter = 'cardioid';%'cardioid'
 defaultOptions.twinMic.icaMap.angle = [180,0] % starting angles of the pattern zeros
 defaultOptions.twinMic.icaMap.iterations = 1; % number of iterations of ica
                                               % nullsteering per block
-defaultOptions.twinMic.icaMap.update = 0.1; % update coefficient for:
-                                            % angles of sources 
-											% amplification of sources
-											% binary mask
+defaultOptions.twinMic.icaMap.updateAngle = 0.1; % update coefficient for
+                                                 % angles of sources 
+defaultOptions.twinMic.icaMap.updateAmp = 0.1; % update coefficient for
+                                               % amplification of sources
+defaultOptions.twinMic.icaMap.updateMask = 0.1; % update coefficient
+                                                % for binary mask
 %%%%%Twin Microphone%%%%%
 
 %%%%%beamforming%%%%%

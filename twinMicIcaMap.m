@@ -44,10 +44,10 @@ if(isfield(params,'previous'))
 
 	% update angles and amplifications
 	if(~isFirst)
-		angles = options.update*angles ...
-		       + (1-options.update)*params.previous.angles;
-		ampFront = options.update*ampFront ...
-				 + (1-options.update)*params.previous.ampFront;
+		angles = options.updateAngle*angles ...
+		       + (1-options.updateAngle)*params.previous.angles;
+		ampFront = options.updateAmp*ampFront ...
+				 + (1-options.updateAmp)*params.previous.ampFront;
 	end
 
 	% calculate ampSrc from updated values
@@ -70,7 +70,8 @@ if(isfield(params,'previous'))
 
 	% update mask
 	if(~isFirst)
-		mask = options.update*mask + (1-options.update)*params.previous.mask;
+		mask = options.updateMask*mask ...
+		     + (1-options.updateMask)*params.previous.mask;
 	end
 
 	%store estimated parameters
