@@ -38,6 +38,12 @@ if(isfield(params,'previous'))
 	angles = twinIcaToAngle(WNew,false);
 	[~,ampFront] = twinIcaToAmp(WNew);
 
+	% use old data if any nan occurs
+	if(any(isnan(angles))|any(isnan(ampFront)))
+		angles = params.previous.angles;
+		ampFront = params.previous.ampFront;
+	end
+
 	% sort according to angles
 	[angles sortIdx] = sort(angles,'descend');
 	ampFront = ampFront(sortIdx);
