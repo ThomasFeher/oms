@@ -23,7 +23,7 @@ W = bsxfun(@rdivide,W,maxVals); % normalize and remove phase inversion
 % estimate look direction
 betaIdx = mod(maxIdx,2)+1;%index of the not maximum values
 backCardIdx = find(betaIdx==1);
-betaIdxS = sub2ind([2,2],1:rows(W),betaIdx.');
+betaIdxS = sub2ind([2,2],1:2,betaIdx.');
 
 % set positive betas to zero
 beta = W(betaIdxS);
