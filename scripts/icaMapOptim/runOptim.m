@@ -1,3 +1,10 @@
+% load genetic optimization package
+pkg load ga;
+
+% add oms path
+omsPath ='~/Daten/Tom/oms';
+addpath(omsPath);
+
 %options = gaoptimset('Display','diagnose'...
                     %,'FitnessLimit',0 ...
 					%,'OutputFcns',@saveGeneration);

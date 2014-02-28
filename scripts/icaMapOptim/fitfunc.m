@@ -24,7 +24,6 @@ options.impulseResponses = struct('angle',{0 90}...
 								 ,'length',-1);
 dbPath = '~/Daten/Tom/uasr-data/apollo';
 dbSigPath = fullfile(dbPath,'sig');
-omsPath ='~/Daten/Tom/oms';
 
 % generate result dir
 resultDir = sprintf('/home/tom/temp/icaMapOptim-%d-%1.5f-%1.5f-%1.5f'...
@@ -39,10 +38,6 @@ fId = fopen(fullfile(dbPath,'1020.flst'));
 fileList = textscan(fId,'%s %s');
 fclose(fId);
 fileNum = 100;
-
-% add oms path
-addpath(omsPath);
-addpath(fullfile(omsPath,'scripts/icaMapOptim'));
 
 % process file list
 for fileCnt=1:fileNum
