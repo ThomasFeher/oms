@@ -18,7 +18,7 @@ end
 [maxVals maxIdx] = max(abs(W),[],2); % find maximum
 maxVals = maxVals .* sign(W(sub2ind([2;2],[1;2],maxIdx))); % retrieve signs,
                                                        %to see phase inversion
-W = bsxfun('rdivide',W,maxVals); % normalize and remove phase inversion
+W = bsxfun(@rdivide,W,maxVals); % normalize and remove phase inversion
 
 % estimate look direction
 betaIdx = mod(maxIdx,2)+1;%index of the not maximum values
