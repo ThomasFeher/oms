@@ -16,6 +16,8 @@
 % @maskNew: binary mask used to process signal
 function [sigVecProc,paramsNew] = twinMicIcaMap(options,sigVec,block,params)
 
+lhCoeff = options.lhCoeff; % for convenience
+
 if(isfield(params,'previous'))
 	if(isempty(params.previous))
 		params.previous.angles = options.angle;
@@ -67,11 +69,13 @@ if(isfield(params,'previous'))
 
 	% calculate mask by MAP-estimator
 	sigVecNsAbs = abs(sigVecNs);
-	denom = (2*(sigVecNsAbs(1,:)+sigVecNsAbs(2,:))); % common denominator
-	lh1 = (sigVecNsAbs(1,:)-sigVecNsAbs(2,:)) ./ denom + 0.5; % likelyhood chan 1
-	lh2 = (sigVecNsAbs(2,:)-sigVecNsAbs(1,:)) ./ denom + 0.5; % likelyhood chan 2
-	ap1 = lh1*ampSrc(2)/ampSrc(1); % aposteriori chan 1
-	ap2 = lh2*ampSrc(1)/ampSrc(2); % aposteriori chan 2
+	denom = (sigVecNsAbs(1,:)+sigVecNsAbs(2,:)); % common denominator
+	% likelyhood chan 1
+	lh1 = tanh(lhCoeff * ((sigVecNsAbs(1,:)-sigVecNsAbs(2,:)) ./ denom))/2+0.5;
+	% likelyhood chan 2
+	lh2 = tanh(lhCoeff * ((sigVecNsAbs(2,:)-sigVecNsAbs(1,:)) ./ denom))/2+0.5;
+	ap1 = lh1 * (ampSrc(2) / ampSrc(1)); % aposteriori chan 1
+	ap2 = lh2 * (ampSrc(1) / ampSrc(2)); % aposteriori chan 2
 	mask = [ap1>ap2;ap2>ap1]; % get maximum
 
 	% update mask
