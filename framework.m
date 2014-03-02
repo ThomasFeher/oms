@@ -464,9 +464,10 @@ if(doTwinMic(options))
 	maskDf.previous = []; %initialize mask for distance filter
 	coeffWf.previous = []; %initialize coefficients for Wiener filter
 	coeffNS.previous = []; %initialize coefficients for null steering
+	paramsIcaMap.previous = [];% initialize parameter for ICA-MAP
 	%initialize array for estimatet null steering angles (NLMS and ICA)
 	results.twinMic.nullSteering.angle = cell(blockNum,1);
-	paramsIcaMap.previous = [];% initialize parameter for ICA-MAP
+	results.twinMic.icaMap.params = cell(blockNum,1);
 	for(blockCnt=1:blockNum) %process blockwise
 		sigVecProc = squeeze(sigVec(:,blockCnt,:)); %current processing block
 		if(options.doDma)
@@ -499,6 +500,8 @@ if(doTwinMic(options))
 			                              sigVecProc,...
 										  squeeze(blockMat(:,blockCnt,:)),...
 										  paramsIcaMap);
+			% store progression of parameters
+			results.twinMic.icaMap.params{blockCnt} = paramsIcaMap.previous;
 		end
 		sigVecNew(:,blockCnt,:) = sigVecProc;
 		if(options.doConvolution)
