@@ -114,13 +114,17 @@ case {'ICA2','ica2'}
 		end
 		WNew = FastICA(block,iterations); % do FastICA
 		%prevent complex valued results
-		WNewComplex = iscomplex(WNew);
+		WNewComplex = ~isreal(WNew);
 		if(any(WNewComplex))
 			WNew = W;% keep old value
 			angleNew = angle;
 		else
 			WNew = WNew * W; % include the "pre-demixing" based on previous run
 			angleNew = twinIcaToAngle(WNew,doForceFrontBack);
+			% use old data if any nan occurs
+			if(any(isnan(angleNew)))
+				angleNew = angle;
+			end
 			angleNew = sort(angleNew,'descend');
 			angleNew = u*angleNew + (1-u)*angle;
 		end
