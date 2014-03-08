@@ -69,14 +69,19 @@ if(isfield(params,'previous'))
 
 	% calculate mask by MAP-estimator
 	sigVecNsAbs = abs(sigVecNs);
-	denom = (sigVecNsAbs(1,:)+sigVecNsAbs(2,:)); % common denominator
+	sigVecNsAbs = sigVecNsAbs./max(max(sigVecNsAbs));
+	%denom = (sigVecNsAbs(1,:)+sigVecNsAbs(2,:)); % common denominator
 	% likelyhood chan 1
-	lh1 = tanh(lhCoeff * ((sigVecNsAbs(1,:)-sigVecNsAbs(2,:)) ./ denom))/2+0.5;
+	lh1 = (lhCoeff * ((sigVecNsAbs(1,:)-sigVecNsAbs(2,:)) ));
 	% likelyhood chan 2
-	lh2 = tanh(lhCoeff * ((sigVecNsAbs(2,:)-sigVecNsAbs(1,:)) ./ denom))/2+0.5;
+	lh2 = (lhCoeff * ((sigVecNsAbs(2,:)-sigVecNsAbs(1,:)) ));
 	ap1 = lh1 * (ampSrc(2) / ampSrc(1)); % aposteriori chan 1
 	ap2 = lh2 * (ampSrc(1) / ampSrc(2)); % aposteriori chan 2
 	mask = [ap1>ap2;ap2>ap1]; % get maximum
+	%plot(sigVecNsAbs.');
+	%disp({"ap1: " ampSrc(2)/ampSrc(1)});
+	%disp({"ap2: " ampSrc(1)/ampSrc(2)});
+	%keyboard
 
 	% update mask
 	if(~isFirst)
