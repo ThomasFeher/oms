@@ -14,7 +14,7 @@
 %    		covers the region where the global minimum is expected
 %               *** note: these are no bound constraints!! ***
       FVr_minbound = [1,0,0,0,0]; 
-      FVr_maxbound = [20,1,1,1,10]; 
+      FVr_maxbound = [100,1,1,1,1000]; 
       I_bnd_constr = 1;  %1: use bounds as bound constraints, 0: no bound constraints      
             
 % I_NP            number of population members
