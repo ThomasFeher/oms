@@ -1,4 +1,4 @@
-function fitness = fitfuncDeMat(parVec)
+function fitness = fitfuncDeMat(parVec,S_struct)
 % set variable options
 options.twinMic.icaMap.iterations = fix(parVec(1));
 options.twinMic.icaMap.updateAngle = parVec(2);
