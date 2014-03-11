@@ -95,8 +95,8 @@ diary(fullfile(resultDir,['log' admaAlgoUpCase '.txt']));%switch logging on
 disp(['script: ' mfilename]);
 
 %display commit hash
-[~,gitCommit] = system('git rev-parse HEAD');
-disp(['commit: ' gitCommit]);
+[~,gitCommit] = system(['cd ' omsDir ';git rev-parse HEAD']);
+disp(['oms commit: ' gitCommit]);
 
 %display all variables
 disp('settings:');
