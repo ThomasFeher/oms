@@ -12,10 +12,9 @@ uasrPath = '~/Daten/Tom/uasr/';
 uasrDataPath = '~/Daten/Tom/uasr-data/';
 
 %%%%%parameters%%%%%
-distances = [0.4];
+distances = [0.05,0.1,0.15,0.2,0.3,0.4,0.5,0.75,1];
 level = -10;
 speaker_angle = 0;
-%angles = [0:15:180]+speaker_angle;
 shortSet = false;%process only first <shortSetNum> files
 shortSetNum = 0;%set to 0 and shortSet to true in order to use already
                 %processed data
@@ -131,7 +130,7 @@ elseif(strcmpi(room,'praktikum'))
 	[noi distIdx] = min(distDiff);
 	distances = distancesPraktikum(distIdx);
 else
-	error(['unknown room name: ' room ']);
+	error(['unknown room name: ' room]);
 end
 
 %set correct speech recognition model
@@ -216,7 +215,7 @@ for distCnt = 1:numel(distances)
 		options.irDatabaseName = irDatabaseName;
 		options.impulseResponses = struct(...
 			'angle',{speaker_angle speaker_angle}...
-			,'distance',{distances distances}...
+			,'distance',{distances(distCnt) distances(distCnt)}...
 			,'room',room...
 			,'level',{0 levelNorm+level}...
 			,'length',-1);
@@ -227,17 +226,17 @@ for distCnt = 1:numel(distances)
 		[noi, snrCardioid, snrBinMask, snrSphere] = evalTwinMic(opt,result);
 		snrCardImp = snrCardioid - snrSphere;
 		snrBinImp = snrBinMask - snrSphere;
-		snrImpAllCard(angleCnt,1) =...
-			snrImpAllCard(angleCnt,1) + snrCardImp;
-		snrSphereAll(angleCnt,1) =...
-			snrSphereAll(angleCnt,1) + snrSphere;
-		snrAllCard(angleCnt,1) =...
-			snrAllCard(angleCnt,1) + snrCardioid;
+		snrImpAllCard(distCnt,1) =...
+			snrImpAllCard(distCnt,1) + snrCardImp;
+		snrSphereAll(distCnt,1) =...
+			snrSphereAll(distCnt,1) + snrSphere;
+		snrAllCard(distCnt,1) =...
+			snrAllCard(distCnt,1) + snrCardioid;
 
-		snrImpAllBm(angleCnt,1) =...
-			snrImpAllBm(angleCnt,1) + snrBinImp;
-		snrAllBm(angleCnt,1) =...
-			snrAllBm(angleCnt,1) + snrBinMask;
+		snrImpAllBm(distCnt,1) =...
+			snrImpAllBm(distCnt,1) + snrBinImp;
+		snrAllBm(distCnt,1) =...
+			snrAllBm(distCnt,1) + snrBinMask;
 
 		%%%%%output signal%%%%%
 		%store signals (sphere, cardioid and binMask)
