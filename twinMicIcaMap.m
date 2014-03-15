@@ -50,6 +50,9 @@ if(isfield(params,'previous'))
 	[angles sortIdx] = sort(angles,'descend');
 	ampFront = ampFront(sortIdx);
 
+	% normalize amplification
+	ampFront = ampFront / max(ampFront);
+
 	% update angles and amplifications
 	if(~isFirst)
 		angles = options.updateAngle*angles ...
