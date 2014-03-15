@@ -91,9 +91,9 @@ defaultOptions.twinMic.icaMap.updateAmp = 0.1; % update coefficient for
                                                % amplification of sources
 defaultOptions.twinMic.icaMap.updateMask = 0.1; % update coefficient
                                                 % for binary mask
-defaultOptions.twinMic.icaMap.lhCoeff = 1; % coefficient in likelihood function
-										   % the bigger lhCoeff, the smaller
-										   % the influence of the prior
+defaultOptions.twinMic.icaMap.apPower = 1; % effectively weights the aposteriori function
+								   % values above 1 boost aposteriori influence
+								   % values below 1 boost likelihood influence
 %%%%%Twin Microphone%%%%%
 
 %%%%%beamforming%%%%%

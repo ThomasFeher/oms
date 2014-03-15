@@ -16,7 +16,7 @@
 % @maskNew: binary mask used to process signal
 function [sigVecProc,paramsNew] = twinMicIcaMap(options,sigVec,block,params)
 
-lhCoeff = options.lhCoeff; % for convenience
+apPower = options.apPower; % for convenience
 
 if(isfield(params,'previous'))
 	if(isempty(params.previous))
@@ -74,13 +74,13 @@ if(isfield(params,'previous'))
 	sigVecNsAbs = abs(sigVecNs);
 	sigVecNsAbs = sigVecNsAbs./max(max(sigVecNsAbs));
 	% likelyhood chan 1
-	lh1 = (lhCoeff * ((sigVecNsAbs(1,:)-sigVecNsAbs(2,:)) ));
+	lh1 = sigVecNsAbs(1,:)-sigVecNsAbs(2,:);
 	% likelyhood chan 2
-	lh2 = (lhCoeff * ((sigVecNsAbs(2,:)-sigVecNsAbs(1,:)) ));
+	lh2 = sigVecNsAbs(2,:)-sigVecNsAbs(1,:);
 	% aposteriori probability
 	if(options.doAposteriori)
-		ap1 = lh1 * (ampSrc(2) / ampSrc(1)); % aposteriori chan 1
-		ap2 = lh2 * (ampSrc(1) / ampSrc(2)); % aposteriori chan 2
+		ap1 = lh1 * (ampSrc(2) / ampSrc(1)).^apPower; % aposteriori chan 1
+		ap2 = lh2 * (ampSrc(1) / ampSrc(2)).^apPower; % aposteriori chan 2
 	else
 		ap1 = lh1;
 		ap2 = lh2;
