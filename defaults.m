@@ -81,6 +81,7 @@ defaultOptions.twinMic.wienerFilter.signalPlusNoiseEstimate = 'cardioid';
 						%'sphere' or 'cardioid' (means front cardioid)
 defaultOptions.twinMic.wienerFilter.signalToFilter = 'cardioid';%'cardioid'
 											%(means front cardioid) or 'sphere'
+defaultOptions.twinMic.icaMap.doAposteriori = true;
 defaultOptions.twinMic.icaMap.angle = [180,0]; % starting angles of the pattern zeros
 defaultOptions.twinMic.icaMap.iterations = 1; % number of iterations of ica
                                               % nullsteering per block
