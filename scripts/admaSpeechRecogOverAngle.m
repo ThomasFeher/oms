@@ -113,7 +113,7 @@ disp(sprintf('%d-%02d-%02d_%02d:%02d:%02d',currentTime(1),currentTime(2)...
 
 %configure paths for speech corpora
 if(strcmpi(corpus,'samurai'))
-	dbDir='/erk/daten2/uasr-data-common/ssmg/common/';
+	dbDir = fullfile(uasrDataPath,'ssmg/common/');
 	filelistPath = [dbDir 'flists/SAMURAI_0.flst'];
 	signalPath = [dbDir '/sig'];
 elseif(strcmpi(corpus,'apollo'))
