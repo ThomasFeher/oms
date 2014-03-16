@@ -113,7 +113,7 @@ disp(sprintf('%d-%02d-%02d_%02d:%02d:%02d',currentTime(1),currentTime(2)...
 
 %configure paths for speech corpora
 if(strcmpi(corpus,'samurai'))
-	dbDir='/erk/daten2/uasr-data-common/ssmg/common/';
+	dbDir = fullfile(uasrDataPath,'ssmg/common/');
 	filelistPath = [dbDir 'flists/SAMURAI_0.flst'];
 	signalPath = [dbDir '/sig'];
 elseif(strcmpi(corpus,'apollo'))
@@ -262,7 +262,11 @@ else
 end
 
 fId = fopen(filelistPath);
-fileList = textscan(fId,'%s %s');
+if(strcmpi(corpus,'samurai'))
+	fileList = textscan(fId,'%s');
+elseif(strcmpi(corpus,'apollo'))
+	fileList = textscan(fId,'%s %*s');
+end
 fclose(fId);
 fileNum = numel(fileList{1});
 if(shortSet&&shortSetNum<fileNum)
@@ -320,6 +324,9 @@ for angleCnt = 1:numel(angles)
 			diary off;
 		end
 		file = fileList{1}{fileCnt};%get file from list
+		if(strcmpi(corpus,'samurai'))
+			file = [file '.wav'];
+		end
 		fileAbs = fullfile(signalPath,file);%concatenate file and path
 		options.(admaSwitch) = true;%set appropriate algo to true
 		options.resultDir = resultDir;
