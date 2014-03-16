@@ -4,7 +4,7 @@ options.twinMic.icaMap.iterations = fix(parVec(1));
 options.twinMic.icaMap.updateAngle = parVec(2);
 options.twinMic.icaMap.updateAmp = parVec(3);
 options.twinMic.icaMap.updateMask = parVec(4);
-options.twinMic.icaMap.lhCoeff = parVec(5);
+options.twinMic.icaMap.apPower = parVec(5);
 
 snr = -10;
 % set constant options
