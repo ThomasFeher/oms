@@ -28,12 +28,14 @@ admaAlgo = 'wiener1';%'binMask','wiener1','wiener2','dist','nsIca','nsNlms'...
                    %,'nsFix','eight'
 corpus = 'apollo';%'samurai','apollo';
 mic = 'twin';%'twin', 'three'
-model = 'adapt';%model to use for speech recognition: 'adapt', 'adaptNoise'
-                     %any other strings or missing variable model will result in
-                     %usage of the standart model '3_15'
+model = 'adapt';%model to use for speech recognition: 'adapt', 'adaptNoise',
+                     % 'adaptDmaOnly'
+					 % any other strings or missing variable <model> will
+					 % result in usage of the standart model '3_15'
                      %'adapt' uses the corresponding adapted model for each
-                     %algorithm (sphere,adma,binMask)
-                     %'adaptNoise' uses the corresponding 10dB SNR noise models
+                     % algorithm (sphere,adma,binMask)
+                     % 'adaptDmaOnly' uses dma adaption for all algorithms
+                     % 'adaptNoise' uses the corresponding 10dB SNR noise models
 room = 'studio';%'studio' 'praktikum'
 doStoreTmpData = false;%uses lots of space in tmpDir, but improves speed when
                       %run a second time with different algorithm
@@ -174,6 +176,10 @@ if(exist('model','var') & strcmpi(model,'adapt'))
 	else
 		error(['unknown algorithm: ' admaAlgo]);
 	end
+	admaModel = ['3_15_A_' mic '_000_adma_label'];
+	sphereModel = ['3_15_A_' mic '_000_sphere_label'];
+elseif(exist('model','var') & strcmpi(model,'adaptDmaOnly'))
+	binMaskModel = ['3_15_A_' mic '_000_adma_label'];
 	admaModel = ['3_15_A_' mic '_000_adma_label'];
 	sphereModel = ['3_15_A_' mic '_000_sphere_label'];
 elseif(exist('model','var') & strcmpi(model,'adaptNoise'))
