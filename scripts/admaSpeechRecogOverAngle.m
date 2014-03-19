@@ -31,7 +31,7 @@ mic = 'twin';%'twin', 'three'
 model = 'adapt';%model to use for speech recognition: 'adapt', 'adaptNoise',
                      % 'adaptDmaOnly'
 					 % any other strings or missing variable <model> will
-					 % result in usage of the standart model '3_15'
+					 % result in usage of the standard model '3_15'
                      %'adapt' uses the corresponding adapted model for each
                      % algorithm (sphere,adma,binMask)
                      % 'adaptDmaOnly' uses dma adaption for all algorithms
