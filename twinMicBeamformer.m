@@ -9,6 +9,7 @@ if(nargin<3||isfield(mask,'previous')) %calculate new mask
 	cardio = sigVec(1,:);%cardioid signal
 	divided = abs(cardio)./abs(sphere);%ratio between cardioid and sphere
 	newMask = divided>threshold;%calc mask
+	%newMask(find(newMask==0)) = 0.5;%TODO make weighted masking
 	if(isfield(mask,'previous'))%is there a previous mask?
 		if(~isempty(mask.previous))%is previous mask not empty?
 			u = options.twinMic.beamformer.update;%get update coefficient
