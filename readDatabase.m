@@ -207,9 +207,8 @@ function [inputSignal Fs] = loadSignal(sigName)
 	end
 	try
 		[inputSignal Fs] = wavread(sigName);
-	catch err
+	catch 
 		disp(sprintf('error opening %s',sigName));
-		rethrow(err)
 	end
 	inputSignal = inputSignal';
 end
