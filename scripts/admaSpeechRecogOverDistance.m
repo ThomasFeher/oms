@@ -20,15 +20,19 @@ shortSet = false;%process only first <shortSetNum> files
 shortSetNum = 0;%set to 0 and shortSet to true in order to use already
                 %processed data
 doSpeechRecog = true;
-doSphereAndCardioidSpeechRecog = true;%only relevant in doSpeechRecog is set
-doRemote = false;
+doDistSpeechRecog = false; % only relevant if doSpeechRecog is set
+doSphereSpeechRecog = true; % only relevant if doSpeechRecog is set
+doCardioidSpeechRecog = true; % only relevant if doSpeechRecog is set
+doRemote = false; % do speech recognition at remote machine
 doGetRemoteResults = false;%if true, only results of previous run are gathered
 corpus = 'apollo';%'samurai','apollo';
 model = '';%model to use for speech recognition:
-                     %3_15_A_twin_000_adma_label.hmm
-                     %3_15_A_twin_000_binMask_label.hmm
-                     %any other strings or missing variable model will result in
-                     %usage of the standart model '3_15'
+                     % 3_15_A_twin_000_adma_label
+                     % 3_15_A_twin_000_binMask_label
+                     % 3_15_A_twin_000_binMask_noise_label
+                     % 3_15_A_twin_000_adma_noise_label
+					 % any other strings or missing variable model will result
+					 % in usage of the standart model '3_15'
 room = 'studio';%'studio' 'praktikum'
 doStoreTmpData = false;%uses lots of space in tmpDir, but improves speed when
                       %run a second time with different algorithm
@@ -272,24 +276,26 @@ for distCnt = 1:numel(distances)
 		options.speechRecognition.uasrPath = uasrPath;
 		options.speechRecognition.uasrDataPath = uasrDataPath;
 		%adma
-		options.speechRecognition.model = binMaskModel;
-		options.resultDir = admaResultDir;
-		options.speechRecognition.resultDirRemote = admaResultDirRemote;
-		options.speechRecognition.sigDir = admaDir;
-		options.speechRecognition.sigDirRemote = admaDirRemote;
-		options.tmpDir = options.speechRecognition.sigDir;
-		results = start(options);
-		wrrBinMask(distCnt,1) = results.speechRecognition.wrr;
-		wrrConfBinMask(distCnt,1) = results.speechRecognition.wrrConf;
-		acrBinMask(distCnt,1) = results.speechRecognition.acr;
-		acrConfBinMask(distCnt,1) = results.speechRecognition.acrConf;
-		corBinMask(distCnt,1) = results.speechRecognition.cor;
-		corConfBinMask(distCnt,1) = results.speechRecognition.corConf;
-		latBinMask(distCnt,1) = results.speechRecognition.lat;
-		latConfBinMask(distCnt,1) = results.speechRecognition.latConf;
-		nBinMask(distCnt,1) = results.speechRecognition.n;
+		if(doDistSpeechRecog)
+			options.speechRecognition.model = binMaskModel;
+			options.resultDir = admaResultDir;
+			options.speechRecognition.resultDirRemote = admaResultDirRemote;
+			options.speechRecognition.sigDir = admaDir;
+			options.speechRecognition.sigDirRemote = admaDirRemote;
+			options.tmpDir = options.speechRecognition.sigDir;
+			results = start(options);
+			wrrBinMask(distCnt,1) = results.speechRecognition.wrr;
+			wrrConfBinMask(distCnt,1) = results.speechRecognition.wrrConf;
+			acrBinMask(distCnt,1) = results.speechRecognition.acr;
+			acrConfBinMask(distCnt,1) = results.speechRecognition.acrConf;
+			corBinMask(distCnt,1) = results.speechRecognition.cor;
+			corConfBinMask(distCnt,1) = results.speechRecognition.corConf;
+			latBinMask(distCnt,1) = results.speechRecognition.lat;
+			latConfBinMask(distCnt,1) = results.speechRecognition.latConf;
+			nBinMask(distCnt,1) = results.speechRecognition.n;
+		end % doDistSpeechRecog
 		%cardioid
-		if(doSphereAndCardioidSpeechRecog)
+		if(doCardioidSpeechRecog)
 			options.speechRecognition.model = admaModel;
 			options.resultDir = cardioidResultDir;
 			options.speechRecognition.resultDirRemote = cardioidResultDirRemote;
@@ -306,7 +312,9 @@ for distCnt = 1:numel(distances)
 			latCardioid(distCnt,1) = results.speechRecognition.lat;
 			latConfCardioid(distCnt,1) = results.speechRecognition.latConf;
 			nCardioid(distCnt,1) = results.speechRecognition.n;
-			%sphere
+		end %if(doCardioidSpeechRecog)
+		%sphere
+		if(doSphereSpeechRecog)
 			options.speechRecognition.model = sphereModel;
 			options.resultDir = sphereResultDir;
 			options.speechRecognition.resultDirRemote = sphereResultDirRemote;
@@ -323,27 +331,27 @@ for distCnt = 1:numel(distances)
 			latSphere(distCnt,1) = results.speechRecognition.lat;
 			latConfSphere(distCnt,1) = results.speechRecognition.latConf;
 			nSphere(distCnt,1) = results.speechRecognition.n;
-		end %if(doSphereAndCardioidSpeechRecog)
+		end %if(doSphereSpeechRecog)
 		clear options;
-	end%if(doSpeechRecog)
 
-	if(doSpeechRecog)
-		dlmwrite(fullfile(resultDir,['wrrDist.csv'])...
-			,[distances(distCnt) wrrBinMask(distCnt,:) ...
-			wrrConfBinMask(distCnt,:)],'-append');
-		dlmwrite(fullfile(resultDir,['acrDist.csv'])...
-			,[distances(distCnt) acrBinMask(distCnt,:) ...
-			acrConfBinMask(distCnt,:)],'-append');
-		dlmwrite(fullfile(resultDir,['corDist.csv'])...
-			,[distances(distCnt) corBinMask(distCnt,:) ...
-			corConfBinMask(distCnt,:)],'-append');
-		dlmwrite(fullfile(resultDir,['latDist.csv'])...
-			,[distances(distCnt) latBinMask(distCnt,:) ...
-			latConfBinMask(distCnt,:)],'-append');
-		dlmwrite(fullfile(resultDir,['nDist.csv'])...
-			,[distances(distCnt) nBinMask(distCnt,:)],'-append');
+		if(doDistSpeechRecog)
+			dlmwrite(fullfile(resultDir,['wrrDist.csv'])...
+				,[distances(distCnt) wrrBinMask(distCnt,:) ...
+				wrrConfBinMask(distCnt,:)],'-append');
+			dlmwrite(fullfile(resultDir,['acrDist.csv'])...
+				,[distances(distCnt) acrBinMask(distCnt,:) ...
+				acrConfBinMask(distCnt,:)],'-append');
+			dlmwrite(fullfile(resultDir,['corDist.csv'])...
+				,[distances(distCnt) corBinMask(distCnt,:) ...
+				corConfBinMask(distCnt,:)],'-append');
+			dlmwrite(fullfile(resultDir,['latDist.csv'])...
+				,[distances(distCnt) latBinMask(distCnt,:) ...
+				latConfBinMask(distCnt,:)],'-append');
+			dlmwrite(fullfile(resultDir,['nDist.csv'])...
+				,[distances(distCnt) nBinMask(distCnt,:)],'-append');
+		end % if(doDistSpeechRecog)
 
-		if(doSphereAndCardioidSpeechRecog)
+		if(doCardioidSpeechRecog)
 			dlmwrite(fullfile(resultDir,'wrrCardioid.csv')...
 				,[distances(distCnt) wrrCardioid(distCnt,:) ...
 				wrrConfCardioid(distCnt,:)],'-append');
@@ -358,7 +366,9 @@ for distCnt = 1:numel(distances)
 				latConfCardioid(distCnt,:)],'-append');
 			dlmwrite(fullfile(resultDir,'nCardioid.csv')...
 				,[distances(distCnt) nCardioid(distCnt,:)],'-append');
+		end %if(doCardioidSpeechRecog)
 
+		if(doSphereSpeechRecog)
 			dlmwrite(fullfile(resultDir,'wrrSphere.csv')...
 				,[distances(distCnt) wrrSphere(distCnt,:) ...
 				wrrConfSphere(distCnt,:)],'-append');
@@ -373,7 +383,7 @@ for distCnt = 1:numel(distances)
 				latConfSphere(distCnt,:)],'-append');
 			dlmwrite(fullfile(resultDir,'nSphere.csv')...
 				,[distances(distCnt) nSphere(distCnt,:)],'-append');
-		end %if(doSphereAndCardioidSpeechRecog)
+		end %if(doSphereSpeechRecog)
 	end%if(doSpeechRecog)
 
 	if(~doGetRemoteResults)
