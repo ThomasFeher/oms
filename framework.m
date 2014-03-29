@@ -223,13 +223,17 @@ if(options.doSpeechRecognition)
 	logFilename2 = fullfile(resultDir,'logExtern.txt');%copy external log file
 								%back to original machine with this file name
 
-	% expand tilde, UASR seems to not like it
+	% expand heading tilde and dot, UASR seems to not like it
 	if(~isMatlab())%only possible in Octave TODO find Matlab function
 		uasrPath = tilde_expand(uasrPath);
 		uasrDataPath = tilde_expand(uasrDataPath);
 		tmpDir = tilde_expand(tmpDir);
 		sigDir = tilde_expand(sigDir);
 	end
+	uasrPath = dot_expand(uasrPath);
+	uasrDataPath = dot_expand(uasrDataPath);
+	tmpDir = dot_expand(tmpDir);
+	sigDir = dot_expand(sigDir);
 
 	if(options.speechRecognition.doRemote&&...
 			~options.speechRecognition.doGetRemoteResults)
@@ -271,9 +275,9 @@ if(options.doSpeechRecognition)
 		results.speechRecognition = speechRecogGetResults(lines,db);
 	else
 		logFilename = fullfile(resultDir,'log.txt');%log speech recognition here
-		results.speechRecognition = ...
-				speechRecognizer(options.speechRecognition.sigDir, tmpDir, ...
-						                   db, model, uasrPath, uasrDataPath);
+		results.speechRecognition = speechRecognizer(sigDir, tmpDir, db ...
+                                                    ,model, uasrPath ...
+                                                    ,uasrDataPath);
    end%do remote
 end
 %%%%%speech recognition%%%%%
