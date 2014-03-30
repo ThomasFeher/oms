@@ -371,7 +371,9 @@ if(options.doADMA)
 	%keyboard
 
 	%export raw cardioid or eight signals
-	if(options.adma.returnCardioids|options.adma.returnEights)
+	if(options.adma.returnCardioids...
+	 ||options.adma.returnEights...
+	 ||options.adma.doIcaBatch)
 		[sigFullFd frequFull] = fftAndFrequ(signal,fs);
 		[cardioidsFd eightsFd] = admaBuildCardioids(sigFullFd,frequFull...
 					,options.adma.d,options.c,options.adma.doEqualization);
@@ -379,65 +381,76 @@ if(options.doADMA)
 		results.adma.eights = ifft(eightsFd.').';
 	end
 
-	%initialize parameter
-	options.adma.oldMask = -1;%TODO throw out of options struct
-	options.adma.last_theta = NaN;%TODO throw out of options struct
-
-	%preallocate arrays
-	sigVecNew = zeros(size(sigVec));
-	sigVecCard = zeros(size(sigVec));
-	if(options.doConvolution)
-		for srcCnt=1:srcNum
-			sigVecEvalNew{srcCnt} = zeros(size(sigVecEval{srcCnt}));
+	if(options.adma.doIcaBatch)
+		if(options.doTdRestore)
+			warning(['Result of batch ICA will be overwritten due to ' ...
+					 '<doTdRestore> key! Please set "options.doTdRestore ' ...
+					 '= false", or use result from "results.adma.icaBatch"']);
 		end
-	end
+		unmixMat = FastICA(results.adma.cardioids,100);
+		results.adma.icaBatch = unmixMat * results.adma.cardioids;	
+		results.signal = results.adma.icaBatch;
+	else
+		%initialize parameter
+		options.adma.oldMask = -1;%TODO throw out of options struct
+		options.adma.last_theta = NaN;%TODO throw out of options struct
 
-	%loop blocks
-	for (blockCnt=1:blockNum) %process blockwise
-		sigVecProc = squeeze(sigVec(:,blockCnt,:)); %current processing block
-
-		[sigVecProc adma_opt sigVecCard(:,blockCnt,:)] = adma(sigVecProc...
-															  ,frequency...
-															  ,fs...
-															  ,options.adma...
-															  ,options.c);
-
-		options.adma.oldMask = adma_opt.newMask;
-		options.adma.last_theta = adma_opt.theta1;
-
-		sigVecNew(:,blockCnt,:) = sigVecProc;
-
-		results.adma.opt(blockCnt) = adma_opt;
-		sigVecNew(:,blockCnt,:) = sigVecProc;
-
-		%Process single Signal for SNR evaluation
+		%preallocate arrays
+		sigVecNew = zeros(size(sigVec));
+		sigVecCard = zeros(size(sigVec));
 		if(options.doConvolution)
-			%process evaluation signals blockwise
 			for srcCnt=1:srcNum
-				%current processing block
-				sigVecEvalProc = squeeze(sigVecEval{srcCnt}(:,blockCnt,:));
-				adma_opt.findMax = false;%use angles determinded by regular
-				adma_opt.findMin = false;%signal pass
-				[sigVecEvalProc Evalopt] = adma(sigVecEvalProc, ...
-												frequency, ...
-												fs, ...
-												adma_opt,...
-												options.c);
-				results.adma.EvalOpt(srcCnt,blockCnt) = Evalopt;
-				sigVecEvalNew{srcCnt}(:,blockCnt,:) = sigVecEvalProc;
+				sigVecEvalNew{srcCnt} = zeros(size(sigVecEval{srcCnt}));
 			end
 		end
-	end
 
-	sigVec = sigVecNew;
-	clear sigVecNew;
-	results.adma.sigVec = sigVec; 
-	results.adma.sigVecCard = sigVecCard;
-	if (options.doConvolution)
-		sigVecEval = sigVecEvalNew;
-		clear sigVecEvalNew;
-		results.eval.sigVecEval = sigVecEval;
-	end 
+		%loop blocks
+		for (blockCnt=1:blockNum) %process blockwise
+			sigVecProc = squeeze(sigVec(:,blockCnt,:)); %current processing block
+
+			[sigVecProc adma_opt sigVecCard(:,blockCnt,:)] = adma(sigVecProc...
+																  ,frequency...
+																  ,fs...
+																  ,options.adma...
+																  ,options.c);
+
+			options.adma.oldMask = adma_opt.newMask;
+			options.adma.last_theta = adma_opt.theta1;
+
+			sigVecNew(:,blockCnt,:) = sigVecProc;
+
+			results.adma.opt(blockCnt) = adma_opt;
+			sigVecNew(:,blockCnt,:) = sigVecProc;
+
+			%Process single Signal for SNR evaluation
+			if(options.doConvolution)
+				%process evaluation signals blockwise
+				for srcCnt=1:srcNum
+					%current processing block
+					sigVecEvalProc = squeeze(sigVecEval{srcCnt}(:,blockCnt,:));
+					adma_opt.findMax = false;%use angles determinded by regular
+					adma_opt.findMin = false;%signal pass
+					[sigVecEvalProc Evalopt] = adma(sigVecEvalProc, ...
+													frequency, ...
+													fs, ...
+													adma_opt,...
+													options.c);
+					results.adma.EvalOpt(srcCnt,blockCnt) = Evalopt;
+					sigVecEvalNew{srcCnt}(:,blockCnt,:) = sigVecEvalProc;
+				end
+			end
+		end
+
+		sigVec = sigVecNew;
+		clear sigVecNew;
+		results.adma.sigVec = sigVec; 
+		results.adma.sigVecCard = sigVecCard;
+		if (options.doConvolution)
+			sigVecEval = sigVecEvalNew;
+			clear sigVecEvalNew;
+			results.eval.sigVecEval = sigVecEval;
+		end 
+	end % options.adma.doIcaBatch
 end 
 %%%%%%ADMA%%%%%%
 
