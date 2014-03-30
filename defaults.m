@@ -178,7 +178,7 @@ defaultOptions.sourceLocOptions.frequHigh = inf;
 		%result.signal(2,:) = adma signal
 		%result.signal(3,:) = sphere signal
 defaultOptions.doADMA = false;
-defaultOptions.adma.doICA = false; 
+defaultOptions.adma.doIcaBatch = false; % ICA over complete signal
 defaultOptions.adma.doEqualization = true;%equalization of cardioids'
 														%frequency response
 %TODO: change to doFindMax

@@ -25,7 +25,7 @@ doSphereAndCardioidSpeechRecog = true;%only relevant in doSpeechRecog is set
 doRemote = true;
 doGetRemoteResults = false;%if true, only results of previous run are gathered
 admaAlgo = 'wiener1';%'binMask','wiener1','wiener2','dist','nsIca','nsNlms'...
-                   %,'nsFix','eight'
+                   %,'nsFix','eight','icaBatch'
 corpus = 'apollo';%'samurai','apollo';
 mic = 'twin';%'twin', 'three'
 model = 'adapt';%model to use for speech recognition: 'adapt', 'adaptNoise',
@@ -255,6 +255,9 @@ elseif(strcmpi(admaAlgo,'eight')&strcmpi(mic,'three'))
 	admaSwitch = 'doADMA';
 	optionString = ['options.adma.pattern = ''best'';'...
 	                'options.adma.theta2 = 90;'];
+elseif(strcmpi(admaAlgo,'icaBatch') && strcmpi(mic,'three'))
+	admaSwitch = 'doADMA';
+	optionString = ['options.adma.doIcaBatch = true;'];
 elseif(regexpi(admaAlgo,'wiener')&strcmpi(mic,'three'))
 	error('not yet implemented');
 else
@@ -392,7 +395,14 @@ for angleCnt = 1:numel(angles)
 		%%%%%output signal%%%%%
 		%store signals (sphere, cardioid and binMask)
 		%binMask
-		signal = result.signal(1,:).';
+		if(strcmpi(admaAlgo,'icaBatch'))
+			% measure energy at beginning and end to select correct output
+			[~ sigIdx] = min(sum(result.signal(:,1:8000).^2,2) ...
+			               + sum(result.signal(:,end-8000:end).^2,2));
+			signal = result.signal(sigIdx,:).';
+		else
+			signal = result.signal(1,:).';
+		end
 		signal = signal/max(abs(signal))*0.95;
 		wavName = fullfile(admaDir,file);
 		wavwrite(signal,opt.fs,wavName);
