@@ -257,8 +257,7 @@ elseif(strcmpi(admaAlgo,'eight')&strcmpi(mic,'three'))
 	                'options.adma.theta2 = 90;'];
 elseif(strcmpi(admaAlgo,'icaBatch') && strcmpi(mic,'three'))
 	admaSwitch = 'doADMA';
-	optionString = ['options.adma.doIcaBatch = true;'...
-	                'options.doTdRestore = false;'];
+	optionString = ['options.adma.doIcaBatch = true;'];
 elseif(regexpi(admaAlgo,'wiener')&strcmpi(mic,'three'))
 	error('not yet implemented');
 else
