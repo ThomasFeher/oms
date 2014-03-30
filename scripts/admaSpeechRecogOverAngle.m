@@ -398,7 +398,7 @@ for angleCnt = 1:numel(angles)
 		%binMask
 		if(strcmpi(admaAlgo,'icaBatch'))
 			% measure energy at beginning and end to select correct output
-			[~ sigIdx] = min(sum(result.adma.icaBatch(:,1:8000).^2,2) ...
+			[~,sigIdx] = min(sum(result.adma.icaBatch(:,1:8000).^2,2) ...
 			               + sum(result.adma.icaBatch(:,end-8000:end).^2,2));
 			signal = result.adma.icaBatch(sigIdx,:).';
 		else
