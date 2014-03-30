@@ -1,11 +1,9 @@
 clear all;
 close all;
 
-%% Add related folders
-addpath(fileparts(fileparts(mfilename('fullpath'))));
-
-resultDir = '/erk/tmp/feher/threeMicSpeechRecog/';
-%resultDir = '/erk/tmp/feher/speechRecogAdapt2/';
+omsDir = '~/Daten/Tom/oms/';
+resultDir = '/erk/tmp/feher/twinAngle/';
+resultDirRemote = '/erk/tmp/feher/home/';
 tmpDir = resultDir;
 noiseFile = '/erk/daten1/uasr-data-feher/audio/nachrichten_female.wav';
 
@@ -52,8 +50,53 @@ doAdapt = false;%if true, file list for second samurai-corpus is used
 %3_15_A_twin_000_sphere_noise_label.hmm
 %3_15.hmm
 
+%add oms folders
+addpath(omsDir);
+addpath([omsDir '/scripts/']);
+
+%expand directories if necessary
+if ~isMatlab()
+	tmpDir = tilde_expand(tmpDir);
+	resultDir = tilde_expand(resultDir);
+	irDatabaseDir = tilde_expand(irDatabaseDir);
+end
+
+%create result dir
+if(~exist(tmpDir,'dir'))
+	mkdir(tmpDir);
+end
+if(~exist(resultDir,'dir'))
+	mkdir(resultDir);
+end
+
+%start logging
+diary(fullfile(resultDir,['log' admaAlgoUpCase '.txt']));%switch logging on
+
+%display file name
+disp(['script: ' mfilename]);
+
+%display commit hash
+[~,gitCommit] = system(['cd ' omsDir ';git rev-parse HEAD']);
+disp(['oms commit: ' gitCommit]);
+
+%display all variables
+disp('settings:');
+variables = who;%store variable names in cell array
+for varCnt=1:numel(variables)
+	disp([repmat([char(variables(varCnt)) ' = ']...
+			,size(eval(char(variables(varCnt))),1),1)...
+			num2str(eval(char(variables(varCnt))))]);
+end
+
+%print time stamp to log file
+currentTime = clock();
+disp(sprintf('%d-%02d-%02d_%02d:%02d:%02d',currentTime(1),currentTime(2)...
+					                      ,currentTime(3),currentTime(4)...
+										  ,currentTime(5),fix(currentTime(6))));
+
+%configure paths for speech corpora
 if(strcmpi(corpus,'samurai'))
-	dbDir='/erk/daten2/uasr-data-common/ssmg/common/';
+	dbDir = fullfile(uasrDataPath,'ssmg/common/');
 	if(doAdapt)
 		filelistPath = [dbDir 'flists/SAMURAI_0_adp.flst'];
 	else
@@ -61,7 +104,7 @@ if(strcmpi(corpus,'samurai'))
 	end
 	signalPath = [dbDir '/sig'];
 elseif(strcmpi(corpus,'apollo'))
-	dbDir='/erk/daten2/uasr-maintenance/uasr-data/apollo/';
+	dbDir = fullfile(uasrDataPath,'apollo/');
 	filelistPath = [dbDir '1020.flst'];
 	signalPath = [dbDir '/sig'];
 else
@@ -76,21 +119,26 @@ else
 	error(['unknown microphone: ' mic]);
 end
 fId = fopen(filelistPath);
-fileList = textscan(fId,'%s %s');
+if(strcmpi(corpus,'samurai'))
+	fileList = textscan(fId,'%s');
+elseif(strcmpi(corpus,'apollo'))
+	fileList = textscan(fId,'%s %*s');
+end
 fclose(fId);
 fileNum = numel(fileList{1});
-if(shortSet&&shortSetNum<fileNum) fileNum=shortSetNum;end
-if(~exist(tmpDir,'dir')) mkdir(tmpDir); end
-if(~exist(resultDir,'dir')) mkdir(resultDir); end
+if(shortSet&&shortSetNum<fileNum)
+	fileNum=shortSetNum;
+end
+if(~exist(resultDir,'dir'))
+	mkdir(resultDir);
+end
 %delete([resultDir '/*.csv']);%delete previous results
 system(['rename .csv .csv.old ' resultDir '*.csv']);%rename previous results
 %if(~exist([resultDir 'cardioid'],'dir')) mkdir([resultDir 'cardioid']); end
 %if(~exist([resultDir 'binMask'],'dir')) mkdir([resultDir 'binMask']); end
 %if(~exist([resultDir 'sphere'],'dir')) mkdir([resultDir 'sphere']); end
-if(~doGetRemoteResults) diary([resultDir 'log.txt']); end
 
-%distCnt = 1;
-for angleCnt = 1:numel(angles)
+for angleCnt = 1:numel(angles) % TODO remove
 for levelCnt = 1:numel(levels)
 	%reset mean snr
 	snrImpAllCard=zeros(numel(angles),numel(distances));
@@ -114,7 +162,13 @@ for levelCnt = 1:numel(levels)
 
 	if(~doGetRemoteResults)
 	for fileCnt=1:fileNum
+		if(fileCnt>1)
+			diary off;
+		end
 		file = fileList{1}{fileCnt};%get file from list
+		if(strcmpi(corpus,'samurai'))
+			file = [file '.wav'];
+		end
 		fileAbs = fullfile(signalPath,file);%concatenate file and path
 		options.resultDir = resultDir;
 		options.tmpDir = tmpDir;
@@ -143,9 +197,6 @@ for levelCnt = 1:numel(levels)
 			options.adma.mask_update =0.2;
 			options.adma.mask_angle = 0.9;
 		end
-		%sourceDist = 1;
-		%calculate amplification of second signal due to increased distance
-		%levelDist = 20*log10(distances(distCnt)/sourceDist);
 		options.impulseResponses = struct(...
 			'angle',{speaker_angle angles(angleCnt)}...
 			...%,'distance',{sourceDist distances(distCnt)}...
@@ -205,6 +256,7 @@ for levelCnt = 1:numel(levels)
 		wavwrite(signal,opt.fs,wavName);
 	end%filCnt
 	end%if(~doGetRemoteResults)
+	diary on;
 
 	%speech recognition for all three signals
 	if(doSpeechRecog)
