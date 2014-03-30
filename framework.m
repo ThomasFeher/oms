@@ -389,14 +389,14 @@ if(options.doADMA)
 	end
 
 	if(options.adma.doIcaBatch)
-		if(options.doTdRestore)
-			warning(['Result of batch ICA will be overwritten due to ' ...
-					 '<doTdRestore> key! Please set "options.doTdRestore ' ...
-					 '= false", or use result from "results.adma.icaBatch"']);
-		end
+		%if(options.doTdRestore)
+			%warning(['Result of batch ICA will be overwritten due to ' ...
+					 %'<doTdRestore> key! Please set "options.doTdRestore ' ...
+					 %'= false", or use result from "results.adma.icaBatch"']);
+		%end
 		unmixMat = FastICA(results.adma.cardioids,100);
 		results.adma.icaBatch = unmixMat * results.adma.cardioids;	
-		results.signal = results.adma.icaBatch;
+		%results.signal = results.adma.icaBatch;
 	else
 		%initialize parameter
 		options.adma.oldMask = -1;%TODO throw out of options struct
