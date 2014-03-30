@@ -397,6 +397,9 @@ if(options.doADMA)
 		unmixMat = FastICA(results.adma.cardioids,100);
 		results.adma.icaBatch = unmixMat * results.adma.cardioids;	
 		%results.signal = results.adma.icaBatch;
+		if (options.doConvolution) % we don't know the correct signal yet, so
+			results.eval.sigVecEval = sigVecEval; % bypass evaluation stage
+		end 
 	else
 		%initialize parameter
 		options.adma.oldMask = -1;%TODO throw out of options struct
