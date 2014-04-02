@@ -90,6 +90,12 @@ defaultOptions.beamforming.doGeometrySynthesis = false;%TODO implement (see beam
 defaultOptions.beamforming.doWeightMatSynthesis = false;
 defaultOptions.beamforming.weightMatSynthesis.angle = 0;%0 is perpendicular to
 							%microphone axis (only x-coords)
+defaultOptions.beamforming.weightMatSynthesis.doCustom = false; % call a
+                                   % custom weighting matrix synthesis function
+defaultOptions.beamforming.weightMatSynthesis.custom.handle = []; % handle
+                            % to the custom weighting matrix synthesis function
+defaultOptions.beamforming.weightMatSynthesis.custom.options = []; %
+                      % variable containing all options for the custom function
 defaultOptions.beamforming.doBeampattern = false;
 defaultOptions.beamforming.beampattern.phi = [-90:90];%angle phi in degree
 defaultOptions.beamforming.beampattern.teta = [-90:90];%angle teta in degree

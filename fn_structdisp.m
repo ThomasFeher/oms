@@ -86,7 +86,11 @@ for i=1:nsub
 	elseif ischar(a)
 		disp([subnames{i} ' = ' a]);
 	elseif isscalar(a)
-		disp([subnames{i} ' = ' num2str(a)]);
+		if(isa(a,'function_handle'))
+			disp([subnames{i} ' = ' func2str(a)]);
+		else
+			disp([subnames{i} ' = ' num2str(a)]);
+		end
 	%if is linearly spaced vector with more than 2 elements
 	elseif (numel(find(size(a)>1))==1 ...%one dim > 1
 				&& numel(a)>2 ...%more than 2 elements
