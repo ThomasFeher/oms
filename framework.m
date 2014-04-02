@@ -152,7 +152,13 @@ if(options.doBeamforming)
 		disp('synthesizing weight matrix...')
 		[weightMatSynthResults] = weightMatSynth(options);
 		results.weightMatSynth = weightMatSynthResults;
-		options.beamforming.weights = weightMatSynthResults.W;
+		% in case there are weights provided, we combine them via multiplication
+		if(size_equal(options.beamforming.weights,weightMatSynthResults.W))
+			options.beamforming.weights = weightMatSynthResults.W ...
+										.*options.beamforming.weights;
+		else
+			options.beamforming.weights = weightMatSynthResults.W;
+		end
 	else%include beamforming.weights, beamforming.amp and beamforming.delays,
 				%if given or just use equal weights
 		W = options.beamforming.weights;%weights in frequency domain
@@ -180,14 +186,14 @@ if(options.doBeamforming)
 			disp(['no valid frequency domain weights found']);
 			W=ones(sigNum,frequNum)/sigNum;
 		end
-		W = W + delays;%add delays to weights
+		W = W + delays;%add delays to weights FIXME shouldn't we multiply here?
 		%multiply with amplification weights, if given
 		if(all(size(amp)==[sigNum,1]))%amplifications given as column vector
 			amp = amp.';%transpose
 		end
 		if(all(size(amp)==[1,sigNum]))%amplifications given as row vector
 			disp('adding amplifications to microphones...');
-			amp = amp.' * ones(1,frequNum);
+			amp = amp.' * ones(1,frequNum); % TODO use bsxfun
 			W = W .* amp;
 			noAmp = false;
 		else
