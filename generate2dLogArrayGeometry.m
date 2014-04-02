@@ -1,13 +1,22 @@
 %TODO parameters: smallest distance, arraySize; and remove branchLength
-function geometry = generate2dLogArrayGeometry(branchNum,micNumMax,branchLength,type)
-if nargin < 3
+function geometry = generate2dLogArrayGeometry(branchNum,micNumMax,branchLength
+                                              ,type,coeffA,coeffB)
+if(nargin<6)
+	coeffB = 1;
+end
+if(nargin<5)
+	switch type
+case 'straight'
+	coeffA = 10;
+case 'spiral'
+	coeffA = 1;
+end
+end
+if nargin < 4
 	disp 'usage: generate2dLogArrayGeometry(branchNum,micNumMax,branchLength,type)';
 end
 
-logCoeff = 10;
-coeffA = 1;
-coeffB = 1;
-n = 1;
+n = 1; % number of full circles to be covert by spiral arm 
 
 %generate rotation matrix
 ang = 2*pi/branchNum;
@@ -18,11 +27,16 @@ micsPerBranch = floor((micNumMax-1)/branchNum)+1;
 %generate first branch
 switch type
 case 'straight'
-	geometry = [(logspace(log10(1),log10((1+branchLength)*logCoeff),micsPerBranch)-1)/logCoeff;zeros(1,micsPerBranch)];
+	geometry = [(logspace(log10(1)...
+	                     ,log10((1+branchLength)*coeffA)...
+	                     ,micsPerBranch)-1) / coeffA
+	           ;zeros(1,micsPerBranch)];
 case 'spiral'
 	for micCnt=1:micsPerBranch
-		geometry(1,micCnt) = coeffA*cos(angleFunc(micCnt,n,micsPerBranch))*e^(coeffB*angleFunc(micCnt,n,micsPerBranch));
-		geometry(2,micCnt) = coeffA*sin(angleFunc(micCnt,n,micsPerBranch))*e^(coeffB*angleFunc(micCnt,n,micsPerBranch));
+		geometry(1,micCnt) = coeffA*cos(angleFunc(micCnt,n,micsPerBranch))...
+		                           *e^(coeffB*angleFunc(micCnt,n,micsPerBranch));
+		geometry(2,micCnt) = coeffA*sin(angleFunc(micCnt,n,micsPerBranch))...
+		                           *e^(coeffB*angleFunc(micCnt,n,micsPerBranch));
 	end
 	geometry(1,:) -= 1;
 otherwise
