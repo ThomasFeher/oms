@@ -60,7 +60,7 @@ case 'spiral'
 		geometry(2,micCnt) = coeffA*sin(angleFunc(micCnt,n,micsPerBranch))...
 		                           *e^(coeffB*angleFunc(micCnt,n,micsPerBranch));
 	end
-	geometry(1,:) -= 1;
+	geometry([1,2],:) -= geometry([1,2],1);
 otherwise
 	error('unknown array type: %s',type);
 end
