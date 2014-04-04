@@ -212,6 +212,7 @@ if(options.doBeamforming)
 		results.beamforming.beampattern.phi =...
 				options.beamforming.beampattern.phi;
 	end
+	results.beamforming.weights = options.beamforming.weights;
 end
 %%%%%beamforming - weighting matrix synthesis%%%%%
 
