@@ -19,6 +19,9 @@ crossings = conv(xDiffSign,[1 -1],'valid');
 extrVec = abs(crossings).*(-sign(xDiffDiff))/2;
 %set other values to zero
 extrVec = (abs(extrVec)==1).*extrVec;
+% we can not detect extrema at start and end
+extrVec(1) = 0;
+extrVec(end) = 0;
 %extract position indeces
 pos = find(extrVec);
 %count number of found positions (number of extremas)
