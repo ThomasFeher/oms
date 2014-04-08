@@ -29,7 +29,7 @@ tAvNum = options.tAvNum;
 
 %test geometry setting
 %TODO more testing
-if(any(size(options.geometry)==1))%vector, treat as x-coordinate
+if(isrow(options.geometry))%vector, treat as x-coordinate
 	options.geometry = [options.geometry;zeros(2,numel(options.geometry))];
 elseif(size(options.geometry,1)~=3)%no three coordinates given, throw error
 	error('geometry must contain 3 rows with the three coordinates');
