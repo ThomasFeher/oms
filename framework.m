@@ -206,7 +206,8 @@ if(options.doBeamforming)
 		results.beamforming.beampattern.phi =...
 				options.beamforming.beampattern.phi;
 	end
-end
+	results.beamforming.weights = options.beamforming.weights;
+end % options.doBeamforming
 %%%%%beamforming - weighting matrix synthesis%%%%%
 
 %%%%%speech recognition%%%%%
