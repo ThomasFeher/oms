@@ -121,7 +121,7 @@ defaultOptions.beamforming.amp = 1;%if weights given as time domain delays this
 defaultOptions.geometry = [-0.1 0.1;0 0;0 0];
 %defaultOptions.beamforming.doSigProcessing = false;
 defaultOptions.beamforming.doMuMVDROptimization = false;%TODO implement
-defaultOptions.beamforming.muMVDR = inf;%-inf -> sdb, inf -> dsb
+defaultOptions.beamforming.muMVDR = inf; % in dB, -inf -> sdb, inf -> dsb TODO belongs to weightMatSynthesis
 defaultOptions.beamforming.noiseAngle = 'diffuse';%angle in degree or 'diffuse'
 %only for stand alone use of weighting matrix synthesis, otherwise these values
 		%will be determined automatically through blocksize and signal
