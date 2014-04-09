@@ -12,10 +12,6 @@ if(nargin<2)
 	frontIdx = ones(patternDims-1,1);
 end
 if(patternDims-1~=numel(frontIdx))
-	disp('numel(frontIdx):');
-	disp(numel(frontIdx));
-	disp('pattern dimensions - 1:');
-	disp(patternDims-1);
 	error('front index must be same size as angles in beampattern');
 end
 
