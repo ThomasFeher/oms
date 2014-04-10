@@ -212,6 +212,12 @@ if(options.doBeamforming)
 		results.beamforming.beampattern.phi =...
 				options.beamforming.beampattern.phi;
 	end
+	if(options.beamforming.doBeampatternNearfield)
+		beampatternResults = beampatternNearfield(options);
+		results.beamforming.beampattern = beampatternResults;
+		results.beamforming.beampattern.targets =...
+		                                options.beamforming.beampattern.targets;
+	end
 	results.beamforming.weights = options.beamforming.weights;
 end % options.doBeamforming
 %%%%%beamforming - weighting matrix synthesis%%%%%

@@ -96,10 +96,13 @@ defaultOptions.beamforming.weightMatSynthesis.custom.handle = []; % handle
                             % to the custom weighting matrix synthesis function
 defaultOptions.beamforming.weightMatSynthesis.custom.options = []; %
                       % variable containing all options for the custom function
-defaultOptions.beamforming.doBeampattern = false;
+defaultOptions.beamforming.doBeampattern = false; % farfield approximation
+defaultOptions.beamforming.doBeampatternNearfield = false; % exact calculation
 defaultOptions.beamforming.beampattern.phi = [-90:90];%angle phi in degree
 defaultOptions.beamforming.beampattern.teta = [-90:90];%angle teta in degree
-defaultOptions.beamforming.doWng = false;%calculate white noise gain
+defaultOptions.beamforming.beampattern.targets = [-1 1;0 0;0 0]; % target
+       %positions to evaluate nearfield beampattern at [x1 x2 …;y1 y2 …;z1 z2 …]
+defaultOptions.beamforming.doWng = false;%calculate white noise gain TODO implement
 defaultOptions.beamforming.wng.phi = 0;
 defaultOptions.beamforming.wng.teta = 0;
 defaultOptions.beamforming.delays = 0;%delays in time domain, will be added to
