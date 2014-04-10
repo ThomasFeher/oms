@@ -1,5 +1,4 @@
 function result = beampattern(options)
-disp('calculating beampattern ...');
 frequNum = options.frequNum;
 geometry = options.geometry;
 frequency = options.frequency;
