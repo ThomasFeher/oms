@@ -26,8 +26,8 @@ signalVec = amplitudes .* e.^(-i*2*pi*delays.*freqs); % [mic,freq,target]
 % calculate pattern
 % TODO this is for plane waves, the denominator changes for other noise fields
 %   see Brandstein page 22 (2.13)
-patternNoSquare = sum(conj(W) .* signalVec);
-pattern = squeeze(abs(patternNoSquare).^2);
+patternNoSquare = squeeze(sum(conj(W) .* signalVec));
+pattern = abs(patternNoSquare).^2;
 
 result.pattern = pattern;
 result.patternNoSquare = patternNoSquare;
