@@ -18,6 +18,8 @@ speedOfSound = options.c;
 % vector of incoming wave from wanted direction
 refPos = geometry(:,1); % first mic is reference mic
 amplitudes = vecDist(targets,refPos)./vecDist(targets,geometry);
+amplitudes = amplitudes ./ sum(amplitudes) * micNum; % this differs from Brandstein book!
+                     % but makes algo independent of chosen reference microphone
 delays = (vecDist(targets,refPos)-vecDist(targets,geometry))./ speedOfSound;
 amplitudes = reshape(amplitudes,micNum,1,[]);
 delays = reshape(delays,micNum,1,[]);
