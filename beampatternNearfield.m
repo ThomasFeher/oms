@@ -5,7 +5,7 @@ function result = beampatternNearfield(options)
 %   options: OMS options struct
 % output:
 %   pattern: squared response of the array for each target position
-%            [target,freqency]
+%            [freqency,target]
 
 frequNum = options.frequNum;
 geometry = options.geometry;
