@@ -119,7 +119,6 @@ defaultOptions.beamforming.amp = 1;%if weights given as time domain delays this
 %array geometry: [x1 x2 ... xN;y1 y2 ... yN;z1 z2 ... zN]
 		%is set automatically when reading input data from a database
 defaultOptions.geometry = [-0.1 0.1;0 0;0 0];
-%defaultOptions.beamforming.doSigProcessing = false;
 defaultOptions.beamforming.doMuMVDROptimization = false;%TODO implement
 defaultOptions.beamforming.muMVDR = inf; % in dB, -inf -> sdb, inf -> dsb TODO belongs to weightMatSynthesis
 defaultOptions.beamforming.noiseAngle = 'diffuse';%angle in degree or 'diffuse'
