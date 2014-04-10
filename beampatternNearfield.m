@@ -1,4 +1,4 @@
-function pattern = beampatternNearfield(options)
+function result = beampatternNearfield(options)
 % This function calcualates the beampattern of a given mikrophone array and for
 % given target points. It uses the exact calculation of the time delay.
 % input:
@@ -26,8 +26,11 @@ signalVec = amplitudes .* e.^(-i*2*pi*delays.*freqs); % [mic,freq,target]
 % calculate pattern
 % TODO this is for plane waves, the denominator changes for other noise fields
 %   see Brandstein page 22 (2.13)
-pattern = squeeze(abs(sum(conj(W) .* signalVec)).^2);
+patternNoSquare = sum(conj(W) .* signalVec);
+pattern = squeeze(abs(patternNoSquare).^2);
 
+result.pattern = pattern;
+result.patternNoSquare = patternNoSquare;
 function ret = vecDist(vec1,vec2)
 % distance between two vector given as column vectors
 ret = sqrt(sum((vec1-vec2).^2));
@@ -44,21 +47,23 @@ ret = sqrt(sum((vec1-vec2).^2));
 %! options.beamforming.beampattern.targets = [1e3*sin(targets);zeros(1,targetNum);1e3*cos(targets)];
 %! startTime = cputime;
 %! for i=1:100
-%! pattern = beampatternNearfield(options);
+%! result = beampatternNearfield(options);
 %! end
 %! endTime = cputime;
 %! subplot(2,1,1);
-%! plot(targets/pi*180,pattern); title(['cpu time:' num2str((endTime-startTime)/100)]);
+%! plot(targets/pi*180,result.pattern);
+%! title(['cpu time:' num2str((endTime-startTime)/100)]);
 %! options.beamforming.beampattern.phi = 0;
 %! theta = [-90:90];
 %! options.beamforming.beampattern.teta = theta;
 %! startTime = cputime;
 %! for i=1:100
-%! pattern = beampattern(options);
+%! result = beampattern(options);
 %! end
 %! endTime = cputime;
 %! subplot(2,1,2);
-%! plot(theta,pattern.pattern); title(['cpu time:' num2str((endTime-startTime)/100)]);
+%! plot(theta,result.pattern);
+%! title(['cpu time:' num2str((endTime-startTime)/100)]);
 
 %!test # compare with farfield method
 %! options.frequNum = 10;
@@ -70,9 +75,9 @@ ret = sqrt(sum((vec1-vec2).^2));
 %! targets = targets/180*pi;
 %! targetNum = numel(targets);
 %! options.beamforming.beampattern.targets = [1e3*sin(targets);zeros(1,targetNum);1e3*cos(targets)];
-%! patternNear = beampatternNearfield(options);
+%! resultNear = beampatternNearfield(options);
 %! options.beamforming.beampattern.phi = 0;
 %! theta = [-90:90];
 %! options.beamforming.beampattern.teta = theta;
 %! result = beampattern(options);
-%! assert(patternNear,squeeze(result.pattern),0.01);
+%! assert(resultNear.pattern,squeeze(result.pattern),0.01);
