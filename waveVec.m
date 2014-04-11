@@ -11,6 +11,10 @@ function wVec = waveVec(geometry,freqs,targets,speedOfSound)
 % output:
 %   wVec: complex amplitudes [mic,freq,target]
 
+if(iscolumn(freqs))
+	freqs = freqs.';
+end
+
 micNum = numel(geometry(1,:));
 targets = permute(targets,[1 3 2]); % [coord,[],target]
 refPos = geometry(:,1); % first mic is reference mic
@@ -43,3 +47,7 @@ ret = sqrt(sum((vec1-vec2).^2));
 %! targets = zeros(3,1);
 %! result = waveVec(geometry,freqs,targets,340);
 %! assert(result==result(1,:,:));
+
+%!test # freqs in column vector
+%! freqs = linspace(1,1000,freqNum).';
+%! result = waveVec(geometry,freqs,targets,340);
