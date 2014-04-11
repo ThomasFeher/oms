@@ -12,17 +12,17 @@ geometry = options.geometry;
 freqs = options.frequency;
 W = options.beamforming.weights;
 micNum = numel(geometry(1,:));
-targets = reshape(options.beamforming.beampattern.targets,3,1,[]);
+targets = permute(options.beamforming.beampattern.targets,[1 3 2]); % [coord,[],target]
 speedOfSound = options.c;
 
 % vector of incoming wave from wanted direction
 refPos = geometry(:,1); % first mic is reference mic
-amplitudes = vecDist(targets,refPos)./vecDist(targets,geometry);
+amplitudes = vecDist(targets,refPos)./vecDist(targets,geometry); % [[],mic,target]
 amplitudes = amplitudes ./ sum(amplitudes) * micNum; % this differs from Brandstein book!
                      % but makes algo independent of chosen reference microphone
-delays = (vecDist(targets,refPos)-vecDist(targets,geometry))./ speedOfSound;
-amplitudes = reshape(amplitudes,micNum,1,[]);
-delays = reshape(delays,micNum,1,[]);
+delays = (vecDist(targets,refPos)-vecDist(targets,geometry))./ speedOfSound; % [[],mic,target]
+amplitudes = permute(amplitudes,[2,1,3]); % [mic,[],target]
+delays = permute(delays,[2,1,3]); % [mic,[],target]
 signalVec = amplitudes .* e.^(-i*2*pi*delays.*freqs); % [mic,freq,target]
 
 % calculate pattern
