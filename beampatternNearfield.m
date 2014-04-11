@@ -7,23 +7,13 @@ function result = beampatternNearfield(options)
 %   pattern: squared response of the array for each target position
 %            [freqency,target]
 
-frequNum = options.frequNum;
-geometry = options.geometry;
-freqs = options.frequency;
 W = options.beamforming.weights;
-micNum = numel(geometry(1,:));
-targets = permute(options.beamforming.beampattern.targets,[1 3 2]); % [coord,[],target]
-speedOfSound = options.c;
 
 % vector of incoming wave from wanted direction
-refPos = geometry(:,1); % first mic is reference mic
-amplitudes = vecDist(targets,refPos)./vecDist(targets,geometry); % [[],mic,target]
-amplitudes = amplitudes ./ sum(amplitudes) * micNum; % this differs from Brandstein book!
-                     % but makes algo independent of chosen reference microphone
-delays = (vecDist(targets,refPos)-vecDist(targets,geometry))./ speedOfSound; % [[],mic,target]
-amplitudes = permute(amplitudes,[2,1,3]); % [mic,[],target]
-delays = permute(delays,[2,1,3]); % [mic,[],target]
-signalVec = amplitudes .* e.^(-i*2*pi*delays.*freqs); % [mic,freq,target]
+signalVec = waveVec(options.geometry...
+                   ,options.frequency...
+                   ,options.beamforming.beampattern.targets...
+                   ,options.c);
 
 % calculate pattern
 % TODO this is for plane waves, the denominator changes for other noise fields
@@ -33,9 +23,6 @@ pattern = abs(patternNoSquare).^2;
 
 result.pattern = pattern;
 result.patternNoSquare = patternNoSquare;
-function ret = vecDist(vec1,vec2)
-% distance between two vector given as column vectors
-ret = sqrt(sum((vec1-vec2).^2));
 
 %!demo # compare with farfield method
 %! options.frequNum = 10;
