@@ -88,8 +88,15 @@ defaultOptions.beamforming.doNoProcess = false;%no processing, just calculate
 												%weights and pattern
 defaultOptions.beamforming.doGeometrySynthesis = false;%TODO implement (see beamformer.m)
 defaultOptions.beamforming.doWeightMatSynthesis = false;
+defaultOptions.beamforming.weightMatSynthesis.doNearfield = false;
 defaultOptions.beamforming.weightMatSynthesis.angle = 0;%0 is perpendicular to
 							%microphone axis (only x-coords)
+defaultOptions.beamforming.weightMatSynthesis.target = [1;1;1]; % steering
+                                            % position for nearfield beamforming
+defaultOptions.beamforming.weightMatSynthesis.noisePos = 'diffuse'; % noise
+  % position for nearfield beamforming, can be a charakter array 'diffuse' for
+  % diffuse noise field (spherical unisotropic) or a position of the form [x;y;z]
+  % that corresponds to a acoustic monopol at this position
 defaultOptions.beamforming.weightMatSynthesis.doCustom = false; % call a
                                    % custom weighting matrix synthesis function
 defaultOptions.beamforming.weightMatSynthesis.custom.handle = []; % handle
@@ -124,7 +131,7 @@ defaultOptions.beamforming.amp = 1;%if weights given as time domain delays this
 defaultOptions.geometry = [-0.1 0.1;0 0;0 0];
 defaultOptions.beamforming.doMuMVDROptimization = false;%TODO implement
 defaultOptions.beamforming.muMVDR = inf; % in dB, -inf -> sdb, inf -> dsb TODO belongs to weightMatSynthesis
-defaultOptions.beamforming.noiseAngle = 'diffuse';%angle in degree or 'diffuse'
+defaultOptions.beamforming.noiseAngle = 'diffuse';%angle in degree or 'diffuse' TODO belongs to weightMatSynthesis
 %only for stand alone use of weighting matrix synthesis, otherwise these values
 		%will be determined automatically through blocksize and signal
 		%sample rate. they will be overwritten with the apropriate values!
