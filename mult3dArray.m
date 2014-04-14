@@ -32,7 +32,7 @@ result = (permute(sum(permute(arr1,[1,4,2,3]) .* permute(arr2,[4,2,1,3]),3),[1,2
 %!test # inner product
 %! arr1 = rand(1,5,2);
 %! arr2 = rand(5,1,2);
-%! result = multNdArray(arr1,arr2);
+%! result = mult3dArray(arr1,arr2);
 %! for cnt=1:2
 %!   resultComp(:,:,cnt) = arr1(:,:,cnt) * arr2(:,:,cnt);
 %! end
@@ -41,7 +41,7 @@ result = (permute(sum(permute(arr1,[1,4,2,3]) .* permute(arr2,[4,2,1,3]),3),[1,2
 %!test # outer product
 %! arr1 = rand(5,1,2);
 %! arr2 = rand(1,5,2);
-%! result = multNdArray(arr1,arr2);
+%! result = mult3dArray(arr1,arr2);
 %! for cnt=1:2
 %!   resultComp(:,:,cnt) = arr1(:,:,cnt) * arr2(:,:,cnt);
 %! end
@@ -50,7 +50,7 @@ result = (permute(sum(permute(arr1,[1,4,2,3]) .* permute(arr2,[4,2,1,3]),3),[1,2
 %!test # matrices
 %! arr1 = rand(3,5,2);
 %! arr2 = rand(5,4,2);
-%! result = multNdArray(arr1,arr2);
+%! result = mult3dArray(arr1,arr2);
 %! for cnt=1:2
 %!   resultComp(:,:,cnt) = arr1(:,:,cnt) * arr2(:,:,cnt);
 %! end
