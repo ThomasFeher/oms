@@ -31,6 +31,7 @@ retval = ones(micNum, micNum);
 if(strcmp(angle1,'diffuse'))
 	for j = 1:micNum-1
 		for k = (j+1):micNum
+			% pi is multiplied by sinc function
 			retval(j,k) = sinc(2 * frequency * sqrt((geometryX(j) -...
 				geometryX(k))^2+(geometryY(j)-geometryY(k))^2) / c)/(1+sigma);
 			retval(k,j) = retval(j,k);
@@ -46,19 +47,19 @@ else
 				%imagPart = -sin((2 * pi * frequency * cos(angle1) * sqrt((geometryX(j) - geometryX(k))^2+(geometryY(j)-geometryY(k))^2))/c);
 				%retval(j,k) = realPart + imagPart * i;
 				%retval(k,j) = retval(j,k);
-				retval(j,k) = exp(i*2*pi*frequency*abs(geometryX(j)-...
+				retval(j,k) = exp(-i*2*pi*frequency*abs(geometryX(j)-...
 						geometryX(k))*sin(angle1)/c)/(1+sigma);
 				%retval(k,j) = (retval(j,k));
 				retval(k,j) = conj(retval(j,k));
 			else
 				%retval(j,k) = exp(i*2*pi*frequency*(abs(geometryX(j)-geometryX(k))*sin(angle1)*cos(angle2) + abs(geometryY(j)-geometryY(k))*sin(angle1)*sin(angle2)));
 				%retval(k,j) = conj(retval(j,k));
-				retval(j,k) = exp(i*2*pi*frequency*((geometryX(j)-...
+				retval(j,k) = exp(-i*2*pi*frequency*(abs(geometryX(j)-...
 						geometryX(k))*sin(angle1)*cos(angle2) +...
-						(geometryY(j)-geometryY(k))*sin(angle1)*sin(angle2))/c);
-				retval(k,j) = exp(i*2*pi*frequency*((geometryX(k)-...
+						abs(geometryY(j)-geometryY(k))*sin(angle1)*sin(angle2))/c);
+				retval(k,j) = exp(i*2*pi*frequency*(abs(geometryX(k)-...
 						geometryX(j))*sin(angle1)*cos(angle2) +...
-						(geometryY(k)-geometryY(j))*sin(angle1)*sin(angle2))/c);
+						abs(geometryY(k)-geometryY(j))*sin(angle1)*sin(angle2))/c);
 			end
 		end
 	end
