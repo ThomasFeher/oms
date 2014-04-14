@@ -16,7 +16,9 @@ end
 if(ndims(arr1)>2 || ndims(arr2)>2) % TODO is this necessary?
 	for cnt=3:max(ndims(arr1),ndims(arr2))
 		if(size(arr1,cnt)~=size(arr2,cnt))
-			error('nonconformant arguments (dimension %d''s size is %d (op1) and %d (op2)');
+			error(sprintf(['nonconformant arguments (dimension %d''s size '...
+			               'is %d (op1) and %d (op2)'],cnt,size(arr1,cnt)...
+			                                          ,size(arr2,cnt)));
 		end
 	end
 end
