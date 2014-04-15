@@ -10,6 +10,7 @@ function di =  directivityIndex(pattern,frontIdx,phi,theta)
 % FIXME values at poles of coordinate system (θ=0° and θ=180°) are ignored for
 %   the exact calculation method, what happens accuracy wise if the main lobe
 %   points in that direction?
+% TODO rename to directivityIndexFromPattern
 
 patternDims = ndims(pattern);
 doExact = true;
