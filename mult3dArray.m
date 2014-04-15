@@ -7,7 +7,7 @@ function result = mult3dArray(arr1,arr2)
 % "a*b = sum (permute (a, [1, 3, 2]) .* permute (b, [3, 2, 1]), 3)"
 
 if(size(arr1,2) ~= size(arr2,1))
-	error(sprintf('nonconformant arguments (op1 is %dx%d, op2 is %dx1d)'...
+	error(sprintf('nonconformant arguments (op1 is %dx%d, op2 is %dx%d)'...
 	              ,size(arr1,1),size(arr1,2),size(arr2,1),size(arr2,2)));
 end
 %if((size(arr1,1)~=1) || (size(arr2,2)~=1))
