@@ -21,7 +21,7 @@ refPos = geometry(:,1); % first mic is reference mic
 amplitudes = vecDist(targets,refPos)./vecDist(targets,geometry); % [[],mic,target]
 % this differs from the Brandstein book! but makes algo independent of chosen
 % reference microphone
-amplitudes = amplitudes ./ sum(amplitudes) * micNum; 
+amplitudes = amplitudes ./ sum(amplitudes) * micNum;
 delays = (vecDist(targets,refPos)-vecDist(targets,geometry))./ speedOfSound; % [[],mic,target]
 amplitudes = permute(amplitudes,[2,1,3]); % [mic,[],target]
 delays = permute(delays,[2,1,3]); % [mic,[],target]
@@ -44,10 +44,23 @@ ret = sqrt(sum((vec1-vec2).^2));
 %! assert(size(result),[micNum,freqNum,targetNum]);
 
 %!test # wave from front should give equal amplitudes at all microphones
-%! targets = zeros(3,1);
+%! targetNum = 1;
+%! targets = zeros(3,targetNum);
 %! result = waveVec(geometry,freqs,targets,340);
 %! assert(result==result(1,:,:));
 
 %!test # freqs in column vector
 %! freqs = linspace(1,1000,freqNum).';
 %! result = waveVec(geometry,freqs,targets,340);
+
+%!test # negative coordinates
+%! targetNum = 2;
+%! targets = [0 0;-2 2;0 0];
+%! result = waveVec(geometry,freqs,targets,340);
+%! assert(result(:,:,1),conj(result(:,:,2)),eps);
+
+%!test # sum of elements is equal to number of microphones
+%! result = waveVec(geometry,freqs,targets,340);
+%! for cnt=1:targetNum
+%!   assert((sum(abs(result(:,:,cnt)))),ones(1,freqNum)*micNum,eps);
+%! end
