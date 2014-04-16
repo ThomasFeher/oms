@@ -46,8 +46,8 @@ else
 		W(:,freqCnt) = gammaInv*direction(:,freqCnt)...
 				/(direction(:,freqCnt)'*gammaInv*direction(:,freqCnt));
 	end
-	W(isnan(W)) = 0;
 end
+W(isnan(W)) = 0;
 
 %!test # output size
 %! options.beamforming.muMVDR = inf;
