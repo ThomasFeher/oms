@@ -1,14 +1,17 @@
-%calculates weights in frequency domain to get a main lobe in certain direction
-%input:
+function W = beamSteering(angle,geometry,frequencies,c)
+% calculates weights in frequency domain to get a main lobe in certain direction
+% input:
 % 	angle: angle of main lobe in degree
 % 	geometry: geometry of microphones, row vector of coordinates (only one
 % 			dimension supported)
 % 	frequencies: vector of frequencies to calculate weights for
 % 	c: speed of sound in m/s
-%output:
+% output:
 % 	W: weight matrix [frequency,mic]
 
-function W = beamSteering(angle,geometry,frequencies,c)
+warning(['<beamSteering> is deprecated, use <waveVec> or '...
+         '<weightMatSynth_mvdr> instead']);
+
 if(~isvector(geometry))
 	error('geometry must be a vector');
 end
