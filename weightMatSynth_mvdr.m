@@ -35,14 +35,14 @@ else
 	W = zeros(numel(geometry(1,:)),freqNum); % preallocate matrix
 
 	for freqCnt=1:freqNum
-		warning('');
+		%warning('');
 		gammaInv = inv(coherenceMat(geometry(1,:),geometry(2,:),...
 		%gammaInv = inv(coherenceMat(geometry(1,:),zeros(1,numel(geometry(1,:))),...
 				freqs(freqCnt), noiseAngle,0,muMVDR));
-		if(~strcmp('',lastwarn))
-			disp(sprintf('Warning at frequency %d',freqs(freqCnt)));
-			warning('');
-		end
+		%if(~strcmp('',lastwarn))
+			%disp(sprintf('Warning at frequency %d',freqs(freqCnt)));
+			%warning('');
+		%end
 		W(:,freqCnt) = gammaInv*direction(:,freqCnt)...
 				/(direction(:,freqCnt)'*gammaInv*direction(:,freqCnt));
 	end
