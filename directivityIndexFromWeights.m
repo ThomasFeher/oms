@@ -14,7 +14,12 @@ function di = directivityIndexFromWeights(weights,freqs,geometry,target,speedOfS
 %  di: directivity index in dB, size [1,freq]
 
 % wave vector for target direction
-wVec = squeeze(waveVec(geometry,freqs,target,speedOfSound));
+wVec = squeeze(waveVec(geometry,freqs,target,speedOfSound)); % size: [mic,freq]
+
+% coherence of wave vector, should also work
+%cohMat = mult3dArray(permute(wVec,[1,3,2]),permute(wVec,[3,1,2]));
+%cohMat = coherenceMatNearfield(geometry,freqs,target,speedOfSound);
+%nominator = sum(squeeze(mult3dArray(permute(conj(weights),[3,1,2]),cohMat)) .* weights);
 
 nominator = abs(sum(conj(weights) .* wVec)).^2;
 

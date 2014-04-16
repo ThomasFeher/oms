@@ -88,9 +88,11 @@ defaultOptions.beamforming.doNoProcess = false;%no processing, just calculate
 												%weights and pattern
 defaultOptions.beamforming.doGeometrySynthesis = false;%TODO implement (see beamformer.m)
 defaultOptions.beamforming.doWeightMatSynthesis = false;
+defaultOptions.beamforming.doDirectivityIndex = false; % calculates the
+             % directivity index, stored in results.beamforming.directivityIndex
 defaultOptions.beamforming.weightMatSynthesis.doNearfield = false;
 defaultOptions.beamforming.weightMatSynthesis.angle = 0;%0 is perpendicular to
-							%microphone axis (only x-coords)
+               %microphone axis (only x-coords), only used for farfield approach
 defaultOptions.beamforming.weightMatSynthesis.target = [1;1;1]; % steering
                                             % position for nearfield beamforming
 defaultOptions.beamforming.weightMatSynthesis.noisePos = 'diffuse'; % noise
@@ -138,7 +140,8 @@ defaultOptions.beamforming.noiseAngle = 'diffuse';%angle in degree or 'diffuse' 
 defaultOptions.beamforming.noProcess.frequNum = 200;
 defaultOptions.beamforming.noProcess.frequMin = 20;
 defaultOptions.beamforming.noProcess.frequMax = 20000;
-%defaultOptions.beamforming.beampatternResolution = 1;%in degree
+defaultOptions.beamforming.directivityIndex.target = []; % reference point for
+                                                 % directivity index calculation
 %%%%%beamforming%%%%%
 
 %%%%%ICA%%%%%
