@@ -7,9 +7,9 @@ function result = beampatternNearfield(options)
 %   pattern: squared response of the array for each target position
 %            [freqency,target]
 
-W = options.beamforming.weights;
+W = options.beamforming.weights; % size: [mic,freq]
 
-% vector of incoming wave from wanted direction
+% vector of incoming wave from wanted direction, size: [mic,freq,targets]
 signalVec = waveVec(options.geometry...
                    ,options.frequency...
                    ,options.beamforming.beampattern.targets...
@@ -18,8 +18,8 @@ signalVec = waveVec(options.geometry...
 % calculate pattern
 % TODO this is for plane waves, the denominator changes for other noise fields
 %   see Brandstein page 22 (2.13)
-patternNoSquare = squeeze(sum(conj(W) .* signalVec));
-pattern = abs(patternNoSquare).^2;
+patternNoSquare = squeeze(sum(conj(W) .* signalVec)); % size: [freq,targets]
+pattern = abs(patternNoSquare).^2; % size: [freq,targets]
 
 result.pattern = pattern;
 result.patternNoSquare = patternNoSquare;
