@@ -26,7 +26,7 @@ else
 	wVec = permute(wVec,[1,3,2]); % [mic,[],freq]
 
 	nominator = mult3dArray(conj(wVec),permute(wVec,[2,1,3])); % size: [mic,mic,freq]
-	denom = abs(wVec) .* abs(permute(wVec,[2,1,3])); % size: [mic,mic,freq]
+	denom = sqrt(abs(wVec).^2 .* abs(permute(wVec,[2,1,3])).^2); % size: [mic,mic,freq]
 
 	retval = nominator ./ denom;
 end
