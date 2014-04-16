@@ -10,8 +10,8 @@ if(options.beamforming.weightMatSynthesis.doNearfield)
 	% generate steering vector
 	noisePos = options.beamforming.weightMatSynthesis.noisePos;
 	target = options.beamforming.weightMatSynthesis.target;
-	steerVec = beamSteeringNearfield(target,geometry,freqs,speedOfSound).';%[mic,freq]
-	steerVec = permute(steerVec,[1,3,2]);
+	wVec = waveVec(geometry,freqs,target,speedOfSound); % [mic,freq,1]
+	wVec = permute(wVec,[1,3,2]);
 	cohMat = coherenceMatNearfield(geometry,freqs,noisePos,speedOfSound);
 	cohMat = cohMat ./ (1+sigma); % apply MVDR
 	% set main diagonal to one, because sigma is only applied to off diagonal
@@ -19,9 +19,8 @@ if(options.beamforming.weightMatSynthesis.doNearfield)
 	for freqCnt=1:freqNum % is it possible to vectorize?
 		cohMatInv(:,:,freqCnt) = inv(cohMat(:,:,freqCnt));
 	end
-	W = mult3dArray(cohMatInv,steerVec)...
-	 ./ mult3dArray(mult3dArray(conj(permute(steerVec,[2,1,3])),cohMatInv)...
-	               ,steerVec);
+	W = mult3dArray(cohMatInv,wVec)...
+	 ./ mult3dArray(mult3dArray(conj(permute(wVec,[2,1,3])),cohMatInv),wVec);
 	W = squeeze(W);
 else
 	noiseAngle = options.beamforming.noiseAngle;
