@@ -23,7 +23,7 @@ cohMat = coherenceMatNearfield(geometry,freqs,'diffuse',speedOfSound);
 
 denom = sum(squeeze(mult3dArray(permute(conj(weights),[3,1,2]),cohMat)) .* weights);
 
-di = nominator ./ denom;
+di = 10*log10(abs(nominator ./ denom));
 
 %!test # size of output
 %! micNum = 3;
