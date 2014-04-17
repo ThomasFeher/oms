@@ -385,7 +385,6 @@ title(frequency(40))
 %%%%%%ADMA%%%%%%
 if(options.doADMA)
 	disp('adma processing ...');
-	%keyboard
 
 	%export raw cardioid or eight signals
 	if(options.adma.returnCardioids|options.adma.returnEights)
@@ -654,7 +653,6 @@ if(options.doConvolution)%append convolution information
 	irFieldNames = fieldnames(options.impulseResponses);
 	for irCnt=1:numel(irFieldNames)
 		%get field name
-		%keyboard
 		%irFieldName = options.impulseResponses.(irFieldNames{irCnt})
 		%add field name to file name
 		sigVecFileName = strcat(sigVecFileName,irFieldNames{irCnt},'_');
@@ -663,7 +661,6 @@ if(options.doConvolution)%append convolution information
 		%iterate over field content and add each element to file name
 		for eleCnt=1:numel(options.impulseResponses)
 			element = options.impulseResponses(eleCnt).(irFieldNames{irCnt});
-			%keyboard
 			%add field content
 			if(ischar(element))
 				sigVecFileName = sprintf('%s%s_',sigVecFileName,...
