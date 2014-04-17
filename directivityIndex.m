@@ -1,10 +1,13 @@
-function di =  directivityIndex(pattern,frontIdx,phi,theta)
+function di =  directivityIndex(pattern,frontIdx,phi,theta,reference)
 % pattern: beampattern(phi,theta,freq) or beampattern(phi,freq)
 % frontIdx: angle index of front direction, is 1 if not given
 % phi: vector containing start, increment and end value of phi in degree
 % 	TODO take vector of phi values for each element of pattern
 % theta: vector containing start, increment and end value of theta in degree
 % 	TODO take vector of theta values for each element of pattern
+% reference: (optional), the reference value (nominator), this is necessary if
+%            the beamformer is steared at a nearfield source, frontIdx is
+%            ignored if this parameter is provided
 % TODO give frequency index in order to allow calculation for data with no
      %frequency dimension
 % FIXME values at poles of coordinate system (θ=0° and θ=180°) are ignored for
@@ -35,8 +38,13 @@ end
 if(nargin<2)
 	frontIdx = ones(patternDims-1,1);
 end
-if(patternDims-1~=numel(frontIdx))
-	error('Front index must be same size as angles in beampattern.');
+if(nargin<5)
+	doReference = false;
+	if(patternDims-1~=numel(frontIdx))
+		error('Front index must be same size as angles in beampattern.');
+	end
+else
+	doReference = true;
 end
 
 % get squared sensitivities
@@ -60,17 +68,29 @@ if(doExact)
 	patternWeighted = pattern .* areaMat;
 	meanPattern = sum(sum(patternWeighted,1),2)./(sum(areaMat(:)));
 else
-	meanPattern = mean(mean(pattern,1),2);
+	meanPattern = mean(pattern,1);
+	if(patternDims==3)
+		meanPattern = mean(meanPattern,2);
+	end
 end
 
 % calculate directivity index
-if(patternDims==2)
+if(doReference)
+	if(patternDims==3)
+		numerator = reshape(reference,1,1,[]);
+	else
+		numerator = reshape(reference,1,[]);
+	end
+elseif(patternDims==2)
 	%di = pattern(frontIdx,:)./mean(pattern,1);
-	di = pattern(frontIdx,:)./meanPattern;
+	%di = pattern(frontIdx,:)./meanPattern;
+	numerator = pattern(frontIdx,:);
 elseif(patternDims==3)
 	%di = pattern(frontIdx(1),frontIdx(2),:) ./ mean(mean(pattern,1),2);
-	di = pattern(frontIdx(1),frontIdx(2),:) ./ meanPattern;
+	%di = pattern(frontIdx(1),frontIdx(2),:) ./ meanPattern;
+	numerator = pattern(frontIdx(1),frontIdx(2),:);
 end
+di = numerator ./ meanPattern;
 %make output a column vector
 di = squeeze(di);
 if(isrow(di))
